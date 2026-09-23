@@ -6,14 +6,19 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "icons": "node scripts/extract-icons.mjs",
+    "prebuild": "node scripts/extract-icons.mjs"
   },
   "dependencies": {
+    "@iconify-json/solar": "^1.2.12",
+    "@iconify/react": "^6.0.2",
     "next": "16.3.5",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@iconify/utils": "^3.1.7",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
