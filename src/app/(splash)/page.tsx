@@ -10,7 +10,7 @@ export default function SplashPage() {
 
   useEffect(() => {
     const seen = window.localStorage.getItem("tk_onboarded") === "1";
-    const t = setTimeout(() => router.replace(seen ? "/home" : "/onboarding"), 1600);
+    const t = setTimeout(() => router.replace(seen ? "/home" : "/login"), 1600);
     return () => clearTimeout(t);
   }, [router]);
 

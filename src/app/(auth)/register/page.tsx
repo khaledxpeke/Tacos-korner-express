@@ -49,7 +49,7 @@ export default function RegisterPage() {
         showBack
         onBack={() => router.push("/login")}
       />
-      <form onSubmit={submit} className="flex flex-1 flex-col gap-4 px-7 py-7">
+      <form onSubmit={submit} className="flex flex-1 flex-col gap-4 px-7 py-7 md:px-0">
         <div className="grid grid-cols-2 gap-3">
           <TextField label="First name" placeholder="Khaled" value={f.first} onChange={set("first")} error={errors.first} autoComplete="given-name" />
           <TextField label="Last name" placeholder="Bouajila" value={f.last} onChange={set("last")} error={errors.last} autoComplete="family-name" />

@@ -41,7 +41,7 @@ export default function LoginPage() {
         title="Welcome back"
         subtitle="Sign in to continue ordering your favourites."
       />
-      <form onSubmit={submit} className="flex flex-1 flex-col gap-4 px-7 py-7">
+      <form onSubmit={submit} className="flex flex-1 flex-col gap-4 px-7 py-7 md:px-0">
         <TextField
           label="Email"
           type="email"

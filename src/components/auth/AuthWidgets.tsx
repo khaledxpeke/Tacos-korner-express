@@ -29,7 +29,7 @@ export function AuthHeader({
   return (
     <div
       className={cn(
-        "rounded-b-[28px] bg-gradient-to-br px-7 pb-9 pt-14 text-white",
+        "rounded-b-[28px] bg-gradient-to-br px-7 pb-9 pt-14 text-white md:rounded-none md:bg-transparent md:bg-none md:px-0 md:pb-2 md:pt-0 md:text-text",
         gradient,
       )}
     >
@@ -39,14 +39,14 @@ export function AuthHeader({
             type="button"
             aria-label="Back"
             onClick={onBack ?? (() => router.back())}
-            className="grid h-9 w-9 place-items-center rounded-[10px] bg-white/25"
+            className="grid h-9 w-9 place-items-center rounded-[10px] bg-white/25 text-white md:bg-card-gray md:text-text"
           >
             <Icon name="alt-arrow-left-outline" size={18} className="rtl:rotate-180" />
           </button>
         )}
         <h1 className="text-[26px] font-extrabold">{title}</h1>
       </div>
-      <p className="mt-1.5 text-sm text-white/70">{subtitle}</p>
+      <p className="mt-1.5 text-sm text-white/70 md:text-text-muted">{subtitle}</p>
       {footer && <div className="mt-4">{footer}</div>}
     </div>
   );
@@ -148,9 +148,10 @@ export function SocialButton({
       type="button"
       onClick={onClick}
       aria-label={`Continue with ${labels[provider]}`}
-      className="flex h-12 flex-1 items-center justify-center rounded-[12px] border border-border bg-card shadow-card"
+      className="flex h-12 flex-1 items-center justify-center gap-2 rounded-[12px] border border-border bg-card px-2 shadow-card"
     >
-      <Image src={`/images/${provider}.png`} alt="" width={22} height={22} />
+      <Image src={`/images/${provider}.png`} alt="" width={20} height={20} />
+      <span className="text-sm font-normal text-text">{labels[provider]}</span>
     </button>
   );
 }

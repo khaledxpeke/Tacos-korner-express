@@ -13,6 +13,8 @@ export interface RestaurantModel {
   reviews: number;
   deliveryTime: string;
   deliveryFee: number;
+  /** Omitted or true means the kitchen delivers. False is pickup only. */
+  offersDelivery?: boolean;
   zone: string;
   isOpen: boolean;
   openTime: string;

@@ -2,6 +2,7 @@
 
 import Image, { type ImageProps } from "next/image";
 import { useState } from "react";
+import { Icon } from "@/components/ui/Icon";
 import { cn } from "@/lib/utils";
 
 /**
@@ -19,7 +20,7 @@ export function SafeImage({ className, alt, ...rest }: ImageProps) {
           className,
         )}
       >
-        🍽️
+        <Icon name="chef-hat-bold" size={28} className="text-text-muted" />
       </span>
     );
   }

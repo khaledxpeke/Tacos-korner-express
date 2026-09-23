@@ -1,6 +1,8 @@
 "use client";
 
 import { SafeImage as Image } from "@/components/ui/SafeImage";
+import { useRouter } from "next/navigation";
+import { FavoriteHeart } from "@/components/ui/FavoriteHeart";
 import { Icon } from "@/components/ui/Icon";
 import { useFavorites } from "@/context/FavoritesContext";
 import type { RestaurantModel } from "@/data/models";
@@ -16,15 +18,17 @@ export function RestaurantCard({
   onClick?: () => void;
   className?: string;
 }) {
+  const router = useRouter();
   const { isRestaurantFavorite, toggleRestaurant } = useFavorites();
   const isFav = isRestaurantFavorite(restaurant.id);
+  const open = onClick ?? (() => router.push(`/restaurant/${restaurant.id}`));
 
   return (
     <div
       role="link"
       tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => e.key === "Enter" && onClick?.()}
+      onClick={open}
+      onKeyDown={(e) => e.key === "Enter" && open()}
       className={cn(
         "cursor-pointer overflow-hidden rounded-card border-[0.5px] border-border bg-card shadow-card transition hover:-translate-y-0.5 hover:shadow-lg md:rounded-2xl",
         className,
@@ -45,14 +49,15 @@ export function RestaurantCard({
             e.stopPropagation();
             toggleRestaurant(restaurant.id);
           }}
-          className="absolute start-2.5 top-2.5 grid h-7 w-7 place-items-center rounded-full bg-black/35"
+          className="group/fav absolute start-2.5 top-2.5 drop-shadow-md"
         >
-          <Icon
-            name="heart-bold"
-            size={16}
-            className={isFav ? "text-danger" : "text-white"}
-          />
+          <FavoriteHeart saved={isFav} />
         </button>
+        {restaurant.offersDelivery === false && (
+          <span className="absolute start-2.5 bottom-2.5 rounded-full bg-black/55 px-2.5 py-[3px] text-[10px] font-bold text-white md:text-xs">
+            Pickup only
+          </span>
+        )}
         {!restaurant.isOpen && (
           <span className="absolute end-2.5 top-2.5 rounded-full bg-black/55 px-2.5 py-[3px] text-[10px] font-bold text-white">
             Closed

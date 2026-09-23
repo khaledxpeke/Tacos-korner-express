@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
         showBack
         onBack={() => (step > 0 ? setStep((s) => (s - 1) as 0 | 1 | 2) : router.push("/login"))}
       />
-      <div className="flex flex-1 flex-col gap-4 px-7 py-7">
+      <div className="flex flex-1 flex-col gap-4 px-7 py-7 md:px-0">
         {step === 0 && (
           <>
             <TextField

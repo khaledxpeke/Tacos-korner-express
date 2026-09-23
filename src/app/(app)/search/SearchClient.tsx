@@ -1,19 +1,20 @@
 "use client";
 
 import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { useRouter } from "next/navigation";
 import { BackAppBar } from "@/components/layout/BackAppBar";
 import { Page } from "@/components/layout/Page";
 import { ProductCard } from "@/components/home/ProductCard";
 import { RestaurantCard } from "@/components/home/RestaurantCard";
-import { RestaurantQuickPeek } from "@/components/home/RestaurantQuickPeek";
 import { SeeAllCard } from "@/components/home/SeeAllCard";
 import { Button } from "@/components/ui/Button";
 import { BottomSheet } from "@/components/ui/Dialog";
 import { SearchField, Switch } from "@/components/ui/Fields";
 import { Icon } from "@/components/ui/Icon";
 import { EmptyCard, SelectableChip } from "@/components/ui/Misc";
+import { useFulfillment } from "@/context/FulfillmentContext";
 import { categories, maxProductPrice, products, restaurants } from "@/data/home";
-import type { RestaurantModel } from "@/data/models";
+import { productsForMode, restaurantsForMode } from "@/lib/restaurants";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { cn, money } from "@/lib/utils";
 
@@ -38,7 +39,6 @@ export function SearchClient({
   const [query, setQuery] = useState(initialQuery);
   const [scope, setScope] = useState<Scope>("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [peek, setPeek] = useState<RestaurantModel | null>(null);
   const [filters, setFilters] = useState<Filters>({
     category: initialCategory,
     maxPrice: maxProductPrice,
@@ -47,6 +47,8 @@ export function SearchClient({
     sort: "relevance",
   });
   const [recent, setRecent] = useLocalStorage<string[]>("recent_searches", []);
+  const { mode } = useFulfillment();
+  const router = useRouter();
 
   const q = query.trim().toLowerCase();
   const activeFilterCount =
@@ -57,7 +59,7 @@ export function SearchClient({
     (filters.sort !== "relevance" ? 1 : 0);
 
   const dishResults = useMemo(() => {
-    let list = products.filter(
+    let list = productsForMode(mode, products).filter(
       (p) =>
         (!q ||
           p.name.toLowerCase().includes(q) ||
@@ -70,10 +72,10 @@ export function SearchClient({
     if (filters.sort === "priceAsc") list = [...list].sort((a, b) => a.price - b.price);
     if (filters.sort === "priceDesc") list = [...list].sort((a, b) => b.price - a.price);
     return list;
-  }, [q, filters]);
+  }, [q, filters, mode]);
 
   const restaurantResults = useMemo(() => {
-    let list = restaurants.filter(
+    let list = restaurantsForMode(mode, restaurants).filter(
       (r) =>
         (!q ||
           r.name.toLowerCase().includes(q) ||
@@ -85,7 +87,7 @@ export function SearchClient({
     );
     if (filters.sort === "rating") list = [...list].sort((a, b) => b.rating - a.rating);
     return list;
-  }, [q, filters]);
+  }, [q, filters, mode]);
 
   const showResults = q.length > 0 || activeFilterCount > 0;
   const showProducts = scope !== "restaurants";
@@ -208,7 +210,7 @@ export function SearchClient({
               {categories.map((c) => (
                 <SelectableChip
                   key={c.name}
-                  label={`${c.icon} ${c.name}`}
+                  label={c.name}
                   onClick={() => setFilters((f) => ({ ...f, category: c.name }))}
                 />
               ))}
@@ -260,7 +262,11 @@ export function SearchClient({
                 ) : (
                   <div className="mt-2 grid gap-3 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
                     {restaurantResults.map((r) => (
-                      <RestaurantCard key={r.id} restaurant={r} onClick={() => setPeek(r)} />
+                      <RestaurantCard
+                        key={r.id}
+                        restaurant={r}
+                        onClick={() => router.push(`/restaurant/${r.id}`)}
+                      />
                     ))}
                   </div>
                 )}
@@ -271,8 +277,6 @@ export function SearchClient({
           </div>
         </div>
       </Page>
-
-      <RestaurantQuickPeek restaurant={peek} onClose={() => setPeek(null)} />
 
       <BottomSheet open={filtersOpen} onClose={() => setFiltersOpen(false)} title="Filters">
         <div className="flex flex-col gap-5 px-5">

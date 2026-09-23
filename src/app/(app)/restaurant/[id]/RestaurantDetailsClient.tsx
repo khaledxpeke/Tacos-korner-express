@@ -10,7 +10,6 @@ import { RestaurantsMap } from "@/components/home/RestaurantsMap";
 import { SegmentedToggle } from "@/components/orders/OrdersViewToggle";
 import { RoundButton } from "@/components/product/ProductHero";
 import { RatingSummary, ReviewCard } from "@/components/restaurant/ReviewCard";
-import { Button } from "@/components/ui/Button";
 import { SearchField } from "@/components/ui/Fields";
 import { Icon } from "@/components/ui/Icon";
 import { EmptyCard, SelectableChip } from "@/components/ui/Misc";
@@ -224,7 +223,7 @@ export function RestaurantDetailsClient({ restaurant }: { restaurant: Restaurant
               <div className="grid grid-cols-3 gap-2">
                 <ActionButton
                   label="Directions"
-                  image="/images/google-maps.png"
+                  icon="map-point-bold"
                   onClick={() =>
                     window.open(
                       `https://www.google.com/maps/search/?api=1&query=${restaurant.lat},${restaurant.lng}`,
@@ -241,34 +240,24 @@ export function RestaurantDetailsClient({ restaurant }: { restaurant: Restaurant
               </div>
 
               <section className="rounded-card border-[0.5px] border-border bg-card p-4 shadow-card">
-                <div className="flex items-center justify-between">
+                {reviews.length > 0 && (
+                  <RatingSummary
+                    rating={restaurant.rating}
+                    count={restaurant.reviews}
+                    reviews={reviews}
+                    className="border-0 p-0 shadow-none"
+                  />
+                )}
+                <div className={cn("flex items-center justify-between", reviews.length > 0 && "mt-4")}>
                   <h2 className="text-sm font-bold text-text">Reviews</h2>
                   <Link href={`/restaurant/${restaurant.id}/reviews`} className="text-xs font-semibold text-primary">
                     See all ({reviews.length})
                   </Link>
                 </div>
-                <div className="mt-3 flex items-center gap-3">
-                  <span className="text-3xl font-extrabold text-text">{restaurant.rating}</span>
-                  <div className="text-xs text-text-muted">
-                    <Icon name="star-bold" size={14} className="text-amber" /> {restaurant.reviews} ratings
-                  </div>
-                </div>
                 {reviews.slice(0, 2).map((r) => (
                   <ReviewCard key={r.id} review={r} compact className="mt-3 border-0 p-0 shadow-none" />
                 ))}
-                <Button
-                  title="See all reviews"
-                  isTransparent
-                  size="sm"
-                  className="mt-4"
-                  onClick={() => router.push(`/restaurant/${restaurant.id}/reviews`)}
-                />
               </section>
-              {reviews.length > 0 && (
-                <div className="hidden lg:block">
-                  <RatingSummary rating={restaurant.rating} count={restaurant.reviews} reviews={reviews} />
-                </div>
-              )}
             </aside>
           </div>
         </Container>

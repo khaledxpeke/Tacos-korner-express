@@ -8,7 +8,7 @@ import { CategoryCard } from "@/components/home/CategoryCard";
 import { ProductCard } from "@/components/home/ProductCard";
 import { PromoCarousel, PromoMiniCard } from "@/components/home/PromoCard";
 import { RestaurantCard } from "@/components/home/RestaurantCard";
-import { RestaurantQuickPeek } from "@/components/home/RestaurantQuickPeek";
+import { PickupBrowse } from "@/components/home/PickupBrowse";
 import { RestaurantsMap } from "@/components/home/RestaurantsMap";
 import {
   RestaurantsViewToggle,
@@ -18,23 +18,37 @@ import {
 import { SearchField } from "@/components/ui/Fields";
 import { EmptyCard } from "@/components/ui/Misc";
 import { Button } from "@/components/ui/Button";
+import { useFulfillment } from "@/context/FulfillmentContext";
 import { categories, products, promos, restaurants } from "@/data/home";
-import type { ProductModel, RestaurantModel } from "@/data/models";
+import type { ProductModel } from "@/data/models";
+import { productsForMode, restaurantsForMode } from "@/lib/restaurants";
 
 export default function HomePage() {
   const router = useRouter();
   const [view, setView] = useState<RestaurantsView>("cards");
   const [category, setCategory] = useState<string | null>(null);
-  const [peek, setPeek] = useState<RestaurantModel | null>(null);
+  const { mode } = useFulfillment();
 
   const byCategory = (list: ProductModel[]) =>
     category ? list.filter((p) => p.category === category) : list;
 
-  const allNew = byCategory(products.filter((p) => p.isNew));
-  const allPopular = byCategory(products.filter((p) => p.isFeatured));
+  const availableProducts = productsForMode(mode, products);
+  const availableRestaurants = restaurantsForMode(mode, restaurants);
+
+  const allNew = byCategory(availableProducts.filter((p) => p.isNew));
+  const allPopular = byCategory(availableProducts.filter((p) => p.isFeatured));
   const newArrivals = allNew.slice(0, 4);
   const popular = allPopular.slice(0, 4);
-  const visibleRestaurants = restaurants.slice(0, 6);
+  const visibleRestaurants = availableRestaurants.slice(0, 6);
+
+  if (mode === "pickup") {
+    return (
+      <>
+        <AppBar />
+        <PickupBrowse restaurants={availableRestaurants} />
+      </>
+    );
+  }
 
   return (
     <>
@@ -69,7 +83,12 @@ export default function HomePage() {
           <PromoCarousel promos={promos} />
         </div>
 
-        <div className="no-scrollbar -mx-5 mt-4 flex gap-2.5 overflow-x-auto px-5 py-1 md:mx-0 md:mt-10 md:grid md:grid-cols-8 md:gap-3 md:overflow-visible md:px-0 md:py-0">
+        <div className="no-scrollbar -mx-5 mt-4 flex gap-2.5 overflow-x-auto px-5 py-1 md:mx-0 md:mt-10 md:grid md:grid-cols-9 md:gap-3 md:overflow-visible md:px-0 md:py-0">
+          <CategoryCard
+            category={{ name: "All", icon: "🍽️", color: "#F0F2F5" }}
+            active={category === null}
+            onClick={() => setCategory(null)}
+          />
           {categories.map((c) => (
             <CategoryCard
               key={c.name}
@@ -123,11 +142,11 @@ export default function HomePage() {
               ) : (
                 <div className="grid gap-3 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
                   {visibleRestaurants.map((r) => (
-                    <RestaurantCard key={r.id} restaurant={r} onClick={() => setPeek(r)} />
+                    <RestaurantCard key={r.id} restaurant={r} />
                   ))}
                 </div>
               )}
-              {restaurants.length > visibleRestaurants.length && (
+              {availableRestaurants.length > visibleRestaurants.length && (
                 <Button
                   title="See all restaurants"
                   isTransparent
@@ -139,11 +158,13 @@ export default function HomePage() {
               )}
             </>
           ) : (
-            <RestaurantsMap restaurants={restaurants} onSelect={setPeek} />
+            <RestaurantsMap
+              restaurants={availableRestaurants}
+              onSelect={(r) => router.push(`/restaurant/${r.id}`)}
+            />
           )}
         </div>
       </Page>
-      <RestaurantQuickPeek restaurant={peek} onClose={() => setPeek(null)} />
     </>
   );
 }

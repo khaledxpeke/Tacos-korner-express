@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { CartProvider } from "./CartContext";
+import { FulfillmentProvider } from "./FulfillmentContext";
 import { FavoritesProvider } from "./FavoritesContext";
 import { LanguageProvider } from "./LanguageContext";
 import { SnackbarProvider } from "./SnackbarContext";
@@ -13,7 +14,9 @@ export function Providers({ children }: { children: ReactNode }) {
       <LanguageProvider>
         <FavoritesProvider>
           <CartProvider>
-            <SnackbarProvider>{children}</SnackbarProvider>
+            <FulfillmentProvider>
+              <SnackbarProvider>{children}</SnackbarProvider>
+            </FulfillmentProvider>
           </CartProvider>
         </FavoritesProvider>
       </LanguageProvider>

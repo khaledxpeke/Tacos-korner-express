@@ -9,7 +9,7 @@ import { notifications } from "@/data/misc";
 export function AppBar() {
   const unread = notifications.filter((n) => !n.read).length;
   return (
-    <header className="sticky top-0 z-20 flex h-[60px] items-center gap-2 bg-card px-5 md:hidden">
+    <header className="sticky top-14 z-20 flex h-[60px] items-center gap-2 bg-card px-5 md:hidden">
       <Image
         src="/images/logo/logo_foreground.png"
         alt="Takos Korner"

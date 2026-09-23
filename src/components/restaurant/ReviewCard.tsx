@@ -65,10 +65,12 @@ export function RatingSummary({
   rating,
   count,
   reviews,
+  className,
 }: {
   rating: number;
   count: number;
   reviews: ReviewModel[];
+  className?: string;
 }) {
   const dist = [5, 4, 3, 2, 1].map((s) => ({
     s,
@@ -76,7 +78,12 @@ export function RatingSummary({
   }));
   const total = reviews.length || 1;
   return (
-    <div className="flex items-center gap-5 rounded-card border-[0.5px] border-border bg-card p-4 shadow-card">
+    <div
+      className={cn(
+        "flex items-center gap-5",
+        className ?? "rounded-card border-[0.5px] border-border bg-card p-4 shadow-card",
+      )}
+    >
       <div className="text-center">
         <p className="text-4xl font-extrabold text-text">{rating}</p>
         <Stars rating={rating} size={14} className="mt-1" />

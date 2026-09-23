@@ -62,8 +62,8 @@ export function PromoCarousel({ promos }: { promos: PromoModel[] }) {
             aria-label={`Slide ${i + 1}`}
             onClick={() => setIndex(i)}
             className={cn(
-              "h-[5px] rounded-full transition-all duration-250",
-              i === index ? "w-5 bg-white" : "w-1.5 bg-white/45",
+              "h-2 rounded-full transition-all duration-250",
+              i === index ? "w-14 bg-white" : "w-8 bg-white/45",
             )}
           />
         ))}

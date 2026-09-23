@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Container } from "./Container";
+import { FulfillmentBar } from "./FulfillmentBar";
 import { Icon } from "@/components/ui/Icon";
 import { useCart } from "@/context/CartContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -29,11 +30,20 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-30 hidden border-b border-border bg-card/95 backdrop-blur md:block">
-      <Container className="flex h-[68px] items-center gap-6">
-        <Link href="/home" className="flex shrink-0 items-center gap-2">
-          <Image src="/images/logo/logo_foreground.png" alt="" width={40} height={40} priority />
-          <span className="whitespace-nowrap text-lg font-bold text-text">Takos Korner</span>
-        </Link>
+      <Link
+        href="/home"
+        className="absolute start-5 top-1/2 z-10 flex -translate-y-1/2 items-center gap-2 md:start-8"
+      >
+        <Image src="/images/logo/logo_foreground.png" alt="" width={40} height={40} priority />
+        <span className="whitespace-nowrap text-lg font-bold text-text">Takos Korner</span>
+      </Link>
+      <div className="relative mx-auto flex h-[68px] w-full max-w-[1280px] items-center gap-3 px-5 md:px-8">
+        {/* Clears the logo until the page column starts to the right of it. */}
+        <div
+          className="-me-3 w-[max(0px,calc(12rem-max(0px,(100vw-80rem)/2)))] shrink-0"
+          aria-hidden
+        />
+        <FulfillmentBar className="shrink-0" />
 
         <nav className="flex items-center gap-1">
           {links.map((l) => {
@@ -43,7 +53,7 @@ export function SiteHeader() {
                 key={l.href}
                 href={l.href}
                 className={cn(
-                  "rounded-full px-3.5 py-2 text-sm font-semibold transition-colors",
+                  "rounded-full px-3 py-2 text-sm font-semibold transition-colors",
                   active ? "bg-primary-bg text-primary" : "text-text-body hover:bg-card-gray",
                 )}
               >
@@ -54,7 +64,7 @@ export function SiteHeader() {
         </nav>
 
         <form
-          className="relative ms-auto hidden w-full max-w-sm lg:block"
+          className="relative ms-auto hidden min-w-[11rem] w-full max-w-xs flex-1 lg:block"
           onSubmit={(e) => {
             e.preventDefault();
             router.push(q.trim() ? `/search?q=${encodeURIComponent(q.trim())}` : "/search");
@@ -125,7 +135,7 @@ export function SiteHeader() {
             <Image src={fakeUser.avatar} alt="" fill sizes="40px" className="object-cover" />
           </Link>
         </div>
-      </Container>
+      </div>
     </header>
   );
 }

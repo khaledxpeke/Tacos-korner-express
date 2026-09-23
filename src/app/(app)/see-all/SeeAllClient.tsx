@@ -1,15 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import { BackAppBar } from "@/components/layout/BackAppBar";
 import { Page } from "@/components/layout/Page";
 import { ProductCard } from "@/components/home/ProductCard";
 import { RestaurantCard } from "@/components/home/RestaurantCard";
-import { RestaurantQuickPeek } from "@/components/home/RestaurantQuickPeek";
 import { EmptyCard } from "@/components/ui/Misc";
 import { useFavorites } from "@/context/FavoritesContext";
-import { products, restaurants } from "@/data/home";
-import type { RestaurantModel } from "@/data/models";
+import { useFulfillment } from "@/context/FulfillmentContext";
+import { products } from "@/data/home";
+import { productsForMode, restaurantsForMode } from "@/lib/restaurants";
 
 export type SeeAllKind = "new" | "popular" | "favorites" | "restaurants";
 
@@ -23,15 +22,17 @@ const titles: Record<SeeAllKind, string> = {
 /** Mirrors `see_all_screen.dart`: 2-column grid, reused for New, Popular, Favorites. */
 export function SeeAllClient({ kind }: { kind: SeeAllKind }) {
   const { favoriteProductNames } = useFavorites();
-  const [peek, setPeek] = useState<RestaurantModel | null>(null);
+  const { mode } = useFulfillment();
+  const availableRestaurants = restaurantsForMode(mode);
+  const availableProducts = productsForMode(mode, products);
 
   const items =
     kind === "new"
-      ? products.filter((p) => p.isNew)
+      ? availableProducts.filter((p) => p.isNew)
       : kind === "popular"
-        ? products.filter((p) => p.isFeatured)
+        ? availableProducts.filter((p) => p.isFeatured)
         : kind === "favorites"
-          ? products.filter((p) => favoriteProductNames.includes(p.name))
+          ? availableProducts.filter((p) => favoriteProductNames.includes(p.name))
           : [];
 
   return (
@@ -39,16 +40,24 @@ export function SeeAllClient({ kind }: { kind: SeeAllKind }) {
       <BackAppBar
         title={titles[kind]}
         subtitle={
-          kind === "restaurants" ? `${restaurants.length} restaurants` : `${items.length} dishes`
+          kind === "restaurants" ? `${availableRestaurants.length} restaurants` : `${items.length} dishes`
         }
       />
       <Page>
         {kind === "restaurants" ? (
-          <div className="grid gap-3 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
-            {restaurants.map((r) => (
-              <RestaurantCard key={r.id} restaurant={r} onClick={() => setPeek(r)} />
-            ))}
-          </div>
+          availableRestaurants.length === 0 ? (
+            <EmptyCard
+              icon="shop-bold"
+              title="No restaurants for delivery"
+              message="Switch to pickup to see kitchens that don't deliver."
+            />
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
+              {availableRestaurants.map((r) => (
+                <RestaurantCard key={r.id} restaurant={r} />
+              ))}
+            </div>
+          )
         ) : items.length === 0 ? (
           <EmptyCard
             icon={kind === "favorites" ? "heart-outline" : "bottle-bold"}
@@ -67,7 +76,6 @@ export function SeeAllClient({ kind }: { kind: SeeAllKind }) {
           </div>
         )}
       </Page>
-      <RestaurantQuickPeek restaurant={peek} onClose={() => setPeek(null)} />
     </>
   );
 }

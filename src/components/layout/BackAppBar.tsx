@@ -45,7 +45,7 @@ export function BackAppBar({
         "z-20",
         transparent
           ? "absolute inset-x-0 top-0 md:static md:mt-6"
-          : "sticky top-0 bg-card md:static md:bg-transparent md:pt-6",
+          : "sticky top-14 bg-card md:static md:top-0 md:bg-transparent md:pt-6",
         mobileOnly && "md:hidden",
         className,
       )}

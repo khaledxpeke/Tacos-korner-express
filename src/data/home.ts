@@ -85,6 +85,7 @@ export const restaurants: RestaurantModel[] = [
     id: 4,
     name: "Taco Loco",
     cuisine: "Tacos · Mexican",
+    offersDelivery: false,
     description:
       "Street-style tacos loaded with charred meats, bright salsas, and fresh-pressed lime.",
     rating: 4.6,
@@ -169,6 +170,7 @@ export const restaurants: RestaurantModel[] = [
     id: 8,
     name: "Dessert Lab",
     cuisine: "Desserts · Café",
+    offersDelivery: false,
     description:
       "Playful, Instagram-worthy desserts crafted daily — lava cakes, tarts, and small-batch ice cream.",
     rating: 4.9,
@@ -211,6 +213,7 @@ export const restaurants: RestaurantModel[] = [
     id: 10,
     name: "The Juice Bar",
     cuisine: "Drinks · Healthy",
+    offersDelivery: false,
     description:
       "Cold-pressed juices and smoothies made from fruit sourced fresh every morning.",
     rating: 4.5,

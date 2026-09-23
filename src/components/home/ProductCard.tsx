@@ -2,6 +2,7 @@
 
 import { SafeImage as Image } from "@/components/ui/SafeImage";
 import { useRouter } from "next/navigation";
+import { FavoriteHeart } from "@/components/ui/FavoriteHeart";
 import { Icon } from "@/components/ui/Icon";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
@@ -85,13 +86,9 @@ export function ProductCard({
               "info",
             );
           }}
-          className="absolute end-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-card/90 shadow-card md:h-8 md:w-8"
+          className="group/fav absolute end-2 top-2 drop-shadow-md"
         >
-          <Icon
-            name="heart-bold"
-            size={15}
-            className={isFav ? "text-danger" : "text-text-muted-light"}
-          />
+          <FavoriteHeart saved={isFav} />
         </button>
         {product.isNew && (
           <span className="absolute start-1.5 top-1.5 rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-bold text-white md:px-2 md:text-[10px]">
@@ -121,31 +118,18 @@ export function ProductCard({
           <span className="text-[13px] font-extrabold text-primary md:text-lg">
             {money(product.price)}
           </span>
-          {product.isCustomizable ? (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                open();
-              }}
-              className="flex h-[27px] items-center gap-1 rounded-lg border border-amber/50 bg-amber/10 px-2 text-[10px] font-bold text-amber md:h-8 md:px-3 md:text-xs"
-            >
-              <Icon name="tuning-2-bold" size={11} />
-              Build
-            </button>
-          ) : (
-            <button
-              type="button"
-              aria-label="Add to cart"
-              onClick={(e) => {
-                e.stopPropagation();
-                quickAdd();
-              }}
-              className="grid h-[27px] w-[27px] place-items-center rounded-lg bg-primary text-white md:h-8 md:w-8"
-            >
-              <Icon name="add-circle-bold" size={16} />
-            </button>
-          )}
+          <button
+            type="button"
+            aria-label={product.isCustomizable ? "Customize" : "Add to cart"}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (product.isCustomizable) open();
+              else quickAdd();
+            }}
+            className="grid h-8 w-8 place-items-center rounded-xl bg-primary text-lg font-semibold leading-none text-white transition hover:bg-primary-dark md:h-9 md:w-9 md:text-xl"
+          >
+            +
+          </button>
         </div>
       </div>
     </div>

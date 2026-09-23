@@ -76,7 +76,7 @@ export default function RegistrationDetailsPage() {
         onBack={() => (step > 0 ? setStep(step - 1) : router.back())}
         footer={<StepProgressBar step={step} total={steps.length} />}
       />
-      <div className="flex flex-1 flex-col px-7 py-7">
+      <div className="flex flex-1 flex-col px-7 py-7 md:px-0">
         <p className="text-[11px] font-bold tracking-wide text-text-muted">
           STEP {step + 1} OF {steps.length}
         </p>
