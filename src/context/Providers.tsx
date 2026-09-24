@@ -12,13 +12,13 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <FavoritesProvider>
-          <CartProvider>
-            <FulfillmentProvider>
-              <SnackbarProvider>{children}</SnackbarProvider>
-            </FulfillmentProvider>
-          </CartProvider>
-        </FavoritesProvider>
+        <SnackbarProvider>
+          <FavoritesProvider>
+            <CartProvider>
+              <FulfillmentProvider>{children}</FulfillmentProvider>
+            </CartProvider>
+          </FavoritesProvider>
+        </SnackbarProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

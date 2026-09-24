@@ -1,11 +1,10 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Container } from "@/components/layout/Container";
 import { ProductCard } from "@/components/home/ProductCard";
-import { RestaurantsMap } from "@/components/home/RestaurantsMap";
-import { SegmentedToggle } from "@/components/orders/OrdersViewToggle";
 import { RatingSummary, ReviewCard } from "@/components/restaurant/ReviewCard";
 import { SearchField } from "@/components/ui/Fields";
 import { Icon } from "@/components/ui/Icon";
@@ -13,20 +12,20 @@ import { EmptyCard, SelectableChip } from "@/components/ui/Misc";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useSnackbar } from "@/context/SnackbarContext";
-import { useCart } from "@/context/CartContext";
 import { productsOfRestaurant } from "@/data/home";
 import type { RestaurantModel } from "@/data/models";
 import { reviewsOf } from "@/data/reviews";
 import { cn, money } from "@/lib/utils";
 
-type Tab = "menu" | "location";
+const RestaurantMiniMap = dynamic(
+  () => import("@/components/restaurant/RestaurantMiniMap").then((mod) => mod.RestaurantMiniMap),
+  { ssr: false, loading: () => <div className="h-44 animate-pulse bg-card-blue" /> },
+);
 
 /** Mirrors `restaurant_details_screen.dart`: hero, info, tabs Menu / Videos / Location. */
 export function RestaurantDetailsClient({ restaurant }: { restaurant: RestaurantModel }) {
   const snack = useSnackbar();
-  const cart = useCart();
   const { isRestaurantFavorite, toggleRestaurant } = useFavorites();
-  const [tab, setTab] = useState<Tab>("menu");
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -52,7 +51,7 @@ export function RestaurantDetailsClient({ restaurant }: { restaurant: Restaurant
   }, [sections]);
 
   useEffect(() => {
-    if (tab !== "menu" || sections.length === 0) return;
+    if (sections.length === 0) return;
     const observer = new IntersectionObserver(
       (entries) => {
         const hit = entries
@@ -68,7 +67,7 @@ export function RestaurantDetailsClient({ restaurant }: { restaurant: Restaurant
       if (node) observer.observe(node);
     }
     return () => observer.disconnect();
-  }, [sections, tab]);
+  }, [sections]);
 
   function goToCategory(name: string) {
     setActiveCat(name);
@@ -79,9 +78,6 @@ export function RestaurantDetailsClient({ restaurant }: { restaurant: Restaurant
   }
   const reviews = reviewsOf(restaurant.id);
   const isFav = isRestaurantFavorite(restaurant.id);
-  const bag = cart.items.filter((i) => i.restaurantName === restaurant.name);
-  const bagCount = bag.reduce((n, i) => n + i.quantity, 0);
-  const bagTotal = bag.reduce((n, i) => n + i.price * i.quantity, 0);
 
   const share = () => {
     const url = window.location.href;
@@ -175,110 +171,76 @@ export function RestaurantDetailsClient({ restaurant }: { restaurant: Restaurant
 
               <p className="mt-4 text-sm leading-relaxed text-text-body">{restaurant.description}</p>
 
-              <SegmentedToggle<Tab>
-                className="mt-5"
-                value={tab}
-                onChange={setTab}
-                options={[
-                  { value: "menu", label: "Menu", count: menu.length },
-                  { value: "location", label: "Location" },
-                ]}
-              />
+              <div className="mt-5 lg:hidden">
+                <InfoWithMap restaurant={restaurant} />
+              </div>
 
-              {tab === "menu" && (
-                <div className="mt-4">
-                  {cats.length > 0 && (
-                    <div className="sticky top-0 z-10 -mx-5 mb-3 bg-bg/95 px-5 py-2 backdrop-blur md:top-[4.25rem] md:mx-0 md:px-0">
-                      <div className="no-scrollbar flex gap-2 overflow-x-auto">
-                        {cats.map((name) => (
-                          <SelectableChip
-                            key={name}
-                            label={name}
-                            selected={activeCat === name}
-                            onClick={() => goToCategory(name)}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
+              <div className="mt-5">
+                <div className="sticky top-14 z-20 -mx-5 bg-bg/95 px-5 py-2.5 backdrop-blur md:top-[68px] md:mx-0 md:px-0">
                   <SearchField
                     placeholder="Search dishes…"
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
                     onClear={() => setQ("")}
                   />
-                  {sections.length === 0 ? (
-                    <EmptyCard
-                      className="mt-4"
-                      icon="bottle-bold"
-                      title={q.trim() ? "No matching dishes" : "No dishes yet."}
-                      message={
-                        q.trim()
-                          ? "Try another search or pick a different category."
-                          : "This restaurant is still adding its menu."
-                      }
-                    />
-                  ) : (
-                    <div className="mt-4 flex flex-col gap-8">
-                      {sections.map((section, sectionIndex) => (
-                        <section
-                          key={section.name}
-                          data-menu-cat={section.name}
-                          ref={(node) => {
-                            sectionRefs.current[section.name] = node;
-                          }}
-                          className="scroll-mt-24 md:scroll-mt-36"
-                        >
-                          <h2 className="text-base font-extrabold text-text md:text-xl">
-                            {section.name}
-                          </h2>
-                          <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
-                            {section.items.map((p, i) => (
-                              <ProductCard
-                                key={p.id}
-                                product={p}
-                                grid
-                                eager={sectionIndex === 0 && i === 0}
-                              />
-                            ))}
-                          </div>
-                        </section>
+                  {cats.length > 0 && (
+                    <div className="no-scrollbar mt-2.5 flex gap-2 overflow-x-auto">
+                      {cats.map((name) => (
+                        <SelectableChip
+                          key={name}
+                          label={name}
+                          selected={activeCat === name}
+                          onClick={() => goToCategory(name)}
+                        />
                       ))}
                     </div>
                   )}
                 </div>
-              )}
-
-              {tab === "location" && (
-                <div className="mt-4 flex flex-col gap-4">
-                  <RestaurantsMap restaurants={[restaurant]} onSelect={() => {}} />
-                  <InfoCard restaurant={restaurant} />
-                </div>
-              )}
+                {sections.length === 0 ? (
+                  <EmptyCard
+                    className="mt-4"
+                    icon="bottle-bold"
+                    title={q.trim() ? "No matching dishes" : "No dishes yet."}
+                    message={
+                      q.trim()
+                        ? "Try another search or pick a different category."
+                        : "This restaurant is still adding its menu."
+                    }
+                  />
+                ) : (
+                  <div className="mt-4 flex flex-col gap-8">
+                    {sections.map((section, sectionIndex) => (
+                      <section
+                        key={section.name}
+                        data-menu-cat={section.name}
+                        ref={(node) => {
+                          sectionRefs.current[section.name] = node;
+                        }}
+                        className="scroll-mt-40 md:scroll-mt-48"
+                      >
+                        <h2 className="text-base font-extrabold text-text md:text-xl">
+                          {section.name}
+                        </h2>
+                        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
+                          {section.items.map((p, i) => (
+                            <ProductCard
+                              key={p.id}
+                              product={p}
+                              grid
+                              eager={sectionIndex === 0 && i === 0}
+                            />
+                          ))}
+                        </div>
+                      </section>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Sidebar (desktop) */}
-            <aside className="flex flex-col gap-4 lg:order-2">
+            <aside className="flex flex-col gap-4 lg:order-2 lg:sticky lg:top-[92px] lg:self-start">
               <div className="hidden lg:block">
-                <InfoCard restaurant={restaurant} />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${restaurant.lat},${restaurant.lng}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-semibold text-text transition hover:border-primary hover:text-primary"
-                >
-                  <Icon name="map-point-bold" size={16} className="text-primary" />
-                  Directions
-                </a>
-                <a
-                  href={`tel:${restaurant.phone}`}
-                  className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-semibold text-text transition hover:border-primary hover:text-primary"
-                >
-                  <Icon name="phone-calling-outline" size={16} className="text-primary" />
-                  Call
-                </a>
+                <InfoWithMap restaurant={restaurant} />
               </div>
 
               <section className="rounded-card border-[0.5px] border-border bg-card p-4 shadow-card">
@@ -304,23 +266,6 @@ export function RestaurantDetailsClient({ restaurant }: { restaurant: Restaurant
           </div>
         </Container>
       </main>
-
-      {bagCount > 0 && (
-        <div className="sticky bottom-16 z-20 border-t border-border bg-card/95 px-5 py-3 backdrop-blur md:bottom-0">
-          <Container className="flex items-center justify-between gap-3 !px-0">
-            <p className="text-sm font-semibold text-text">
-              {bagCount} {bagCount === 1 ? "item" : "items"} · {money(bagTotal)}
-            </p>
-            <Link
-              href="/cart"
-              className="inline-flex h-11 items-center rounded-full bg-primary px-5 text-sm font-bold text-white hover:bg-primary-dark"
-            >
-              View cart
-            </Link>
-          </Container>
-        </div>
-      )}
-
     </>
   );
 }
@@ -345,14 +290,19 @@ function Stat({
   );
 }
 
-function InfoCard({ restaurant }: { restaurant: RestaurantModel }) {
+function InfoWithMap({ restaurant }: { restaurant: RestaurantModel }) {
   return (
-    <div className="rounded-card border-[0.5px] border-border bg-card p-4 shadow-card">
-      <h2 className="text-sm font-bold text-text">Info</h2>
-      <Row icon="map-point-bold" text={restaurant.address} />
-      <Row icon="phone-outline" text={restaurant.phone} />
-      <Row icon="clock-circle-outline" text={`${restaurant.openTime} – ${restaurant.closeTime}`} />
-      <Row icon="map-outline" text={restaurant.zone} />
+    <div className="overflow-hidden rounded-card border-[0.5px] border-border bg-card shadow-card">
+      <div className="p-4">
+        <h2 className="text-sm font-bold text-text">Info</h2>
+        <Row icon="map-point-bold" text={restaurant.address} />
+        <a href={`tel:${restaurant.phone}`} className="block hover:text-primary">
+          <Row icon="phone-outline" text={restaurant.phone} />
+        </a>
+        <Row icon="clock-circle-outline" text={`${restaurant.openTime} – ${restaurant.closeTime}`} />
+        <Row icon="map-outline" text={restaurant.zone} />
+      </div>
+      <RestaurantMiniMap restaurant={restaurant} />
     </div>
   );
 }

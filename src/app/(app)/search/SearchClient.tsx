@@ -7,8 +7,6 @@ import { Page } from "@/components/layout/Page";
 import { ProductCard } from "@/components/home/ProductCard";
 import { RestaurantCard } from "@/components/home/RestaurantCard";
 import { SeeAllCard } from "@/components/home/SeeAllCard";
-import { Button } from "@/components/ui/Button";
-import { BottomSheet } from "@/components/ui/Dialog";
 import { SearchField, Switch } from "@/components/ui/Fields";
 import { Icon } from "@/components/ui/Icon";
 import { EmptyCard, SelectableChip } from "@/components/ui/Misc";
@@ -38,7 +36,6 @@ export function SearchClient({
 }) {
   const [query, setQuery] = useState(initialQuery);
   const [scope, setScope] = useState<Scope>("all");
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>({
     category: initialCategory,
     maxPrice: maxProductPrice,
@@ -51,12 +48,6 @@ export function SearchClient({
   const router = useRouter();
 
   const q = query.trim().toLowerCase();
-  const activeFilterCount =
-    (filters.category ? 1 : 0) +
-    (filters.maxPrice < maxProductPrice ? 1 : 0) +
-    (filters.openNow ? 1 : 0) +
-    (filters.freeDelivery ? 1 : 0) +
-    (filters.sort !== "relevance" ? 1 : 0);
 
   const dishResults = useMemo(() => {
     let list = productsForMode(mode, products).filter(
@@ -89,7 +80,6 @@ export function SearchClient({
     return list;
   }, [q, filters, mode]);
 
-  const showResults = q.length > 0 || activeFilterCount > 0;
   const showProducts = scope !== "restaurants";
   const showRestaurants = scope !== "products";
 
@@ -104,7 +94,7 @@ export function SearchClient({
       <BackAppBar title="Search" subtitle="Restaurants and dishes" />
       <Page>
         <div className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start lg:gap-8">
-          <aside className="sticky top-24 hidden rounded-2xl border-[0.5px] border-border bg-card p-5 shadow-card lg:block">
+          <aside className="mb-5 rounded-2xl border-[0.5px] border-border bg-card p-5 shadow-card lg:sticky lg:top-24 lg:mb-0">
             <h2 className="text-base font-extrabold text-text">Filters</h2>
             <FilterFields
               filters={filters}
@@ -124,7 +114,6 @@ export function SearchClient({
             placeholder="Search restaurants, dishes…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onClear={() => setQuery("")}
           />
         </form>
 
@@ -145,80 +134,47 @@ export function SearchClient({
               />
             ))}
           </div>
-          <button
-            type="button"
-            onClick={() => setFiltersOpen(true)}
-            aria-label="Filters"
-            className={cn(
-              "relative grid h-9 w-9 shrink-0 place-items-center rounded-full border lg:hidden",
-              activeFilterCount ? "border-primary bg-primary text-white" : "border-border bg-card text-text",
-            )}
-          >
-            <Icon name="tuning-2-outline" size={18} />
-            {activeFilterCount > 0 && (
-              <span className="absolute -end-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-text text-[9px] font-bold text-white">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
         </div>
 
-        {!showResults ? (
+        {q.length === 0 && recent.length > 0 && (
           <div className="mt-5">
-            {recent.length > 0 && (
-              <>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold tracking-wide text-text-muted md:text-sm md:tracking-normal">
-                    Recent searches
-                  </span>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold tracking-wide text-text-muted md:text-sm md:tracking-normal">
+                Recent searches
+              </span>
+              <button
+                type="button"
+                onClick={() => setRecent([])}
+                className="text-xs font-semibold text-text-body"
+              >
+                Clear all
+              </button>
+            </div>
+            <ul className="mt-2 overflow-hidden rounded-card border-[0.5px] border-border bg-card shadow-card">
+              {recent.map((r) => (
+                <li key={r} className="flex items-center gap-3 px-4 py-3">
+                  <Icon name="history-outline" size={18} className="text-text-muted" />
                   <button
                     type="button"
-                    onClick={() => setRecent([])}
-                    className="text-xs font-semibold text-primary"
+                    onClick={() => setQuery(r)}
+                    className="flex-1 text-start text-sm text-text"
                   >
-                    Clear all
+                    {r}
                   </button>
-                </div>
-                <ul className="mt-2 overflow-hidden rounded-card border-[0.5px] border-border bg-card shadow-card">
-                  {recent.map((r) => (
-                    <li key={r} className="flex items-center gap-3 px-4 py-3">
-                      <Icon name="history-outline" size={18} className="text-text-muted" />
-                      <button
-                        type="button"
-                        onClick={() => setQuery(r)}
-                        className="flex-1 text-start text-sm text-text"
-                      >
-                        {r}
-                      </button>
-                      <button
-                        type="button"
-                        aria-label={`Remove ${r}`}
-                        onClick={() => setRecent((l) => l.filter((x) => x !== r))}
-                        className="text-text-muted"
-                      >
-                        <Icon name="close-circle-outline" size={18} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-            <div className="lg:hidden">
-              <span className="mt-5 block text-xs font-bold tracking-wide text-text-muted md:text-sm md:tracking-normal">
-                Browse categories
-              </span>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {categories.map((c) => (
-                  <SelectableChip
-                    key={c.name}
-                    label={c.name}
-                    onClick={() => setFilters((f) => ({ ...f, category: c.name }))}
-                  />
-                ))}
-              </div>
-            </div>
+                  <button
+                    type="button"
+                    aria-label={`Remove ${r}`}
+                    onClick={() => setRecent((l) => l.filter((x) => x !== r))}
+                    className="text-text-muted"
+                  >
+                    <Icon name="close-circle-outline" size={18} />
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
-        ) : (
+        )}
+
           <div className="mt-4 flex flex-col gap-5">
             {showProducts && (
               <section>
@@ -276,32 +232,9 @@ export function SearchClient({
               </section>
             )}
           </div>
-        )}
           </div>
         </div>
       </Page>
-
-      <BottomSheet open={filtersOpen} onClose={() => setFiltersOpen(false)} title="Filters">
-        <div className="flex flex-col gap-5 px-5">
-          <FilterFields filters={filters} setFilters={setFilters} />
-          <div className="flex gap-3">
-            <Button
-              title="Reset"
-              isTransparent
-              onClick={() =>
-                setFilters({
-                  category: null,
-                  maxPrice: maxProductPrice,
-                  openNow: false,
-                  freeDelivery: false,
-                  sort: "relevance",
-                })
-              }
-            />
-            <Button title="Apply" onClick={() => setFiltersOpen(false)} />
-          </div>
-        </div>
-      </BottomSheet>
     </>
   );
 }

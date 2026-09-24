@@ -112,10 +112,10 @@ export function TextArea({
   );
 }
 
-/** Mirrors `custom_search_textfield.dart`. */
+/** Search bar. Amber focus ring; no native/clear X. */
 export function SearchField({
   className,
-  onClear,
+  onClear: _onClear,
   value,
   ...rest
 }: InputHTMLAttributes<HTMLInputElement> & { onClear?: () => void }) {
@@ -127,24 +127,14 @@ export function SearchField({
         className="pointer-events-none absolute start-4 top-1/2 -translate-y-1/2 text-text-muted"
       />
       <input
-        type="search"
+        type="text"
+        inputMode="search"
         value={value}
         className={cn(
-          fieldBase,
-          "rounded-full border-border bg-card ps-12 pe-10 shadow-card",
+          "w-full rounded-full border border-border bg-card py-3 ps-12 pe-4 text-sm text-text shadow-card outline-none transition placeholder:text-text-muted focus:border-amber focus:ring-2 focus:ring-amber/25",
         )}
         {...rest}
       />
-      {onClear && value && (
-        <button
-          type="button"
-          aria-label="Clear"
-          onClick={onClear}
-          className="absolute end-3 top-1/2 -translate-y-1/2 text-text-muted"
-        >
-          <Icon name="close-circle-bold" size={18} />
-        </button>
-      )}
     </div>
   );
 }

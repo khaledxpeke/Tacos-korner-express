@@ -9,6 +9,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <RequireLocation>
       <SiteHeader />
+      <div className="hidden h-[68px] md:block" aria-hidden />
       <div className="sticky top-0 z-30 border-b border-border bg-card md:hidden">
         <Container className="py-2">
           <FulfillmentBar />

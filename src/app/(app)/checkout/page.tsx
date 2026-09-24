@@ -1,10 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { BackAppBar } from "@/components/layout/BackAppBar";
 import { Container } from "@/components/layout/Container";
 import { ReceiptSummaryCard } from "@/components/orders/ReceiptSummaryCard";
+import { AddAddressPanel } from "@/components/address/AddAddressPanel";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { EmptyCard } from "@/components/ui/Misc";
@@ -12,6 +13,7 @@ import { useCart } from "@/context/CartContext";
 import { useFulfillment } from "@/context/FulfillmentContext";
 import { useSnackbar } from "@/context/SnackbarContext";
 import { fakeUser } from "@/data/misc";
+import { useLocalStorage } from "@/lib/useLocalStorage";
 import { cn } from "@/lib/utils";
 
 interface Address {
@@ -19,10 +21,21 @@ interface Address {
   line: string;
 }
 
-const addresses: Address[] = [
+const presetAddresses: Address[] = [
   { label: "Home", line: `${fakeUser.address}, ${fakeUser.city}` },
   { label: "Work", line: "Immeuble Carthage Center, Avenue Habib Bourguiba, Tunis" },
 ];
+
+function iconFor(label: string) {
+  if (label === "Work") return "case-outline";
+  if (label === "Home") return "home-2-outline";
+  return "map-point-outline";
+}
+
+function nextOtherLabel(existing: Address[]) {
+  const count = existing.filter((a) => a.label === "Other" || a.label.startsWith("Other ")).length;
+  return count === 0 ? "Other" : `Other ${count + 1}`;
+}
 
 type Method = "cash" | "card" | "wallet";
 
@@ -39,17 +52,50 @@ export default function CheckoutPage() {
   const snack = useSnackbar();
   const fulfillment = useFulfillment();
   const mode = fulfillment.mode;
-  const savedAddresses: Address[] = [
-    ...(fulfillment.address.trim()
-      ? [{ label: "Deliver to", line: fulfillment.address }]
-      : []),
-    ...addresses.filter((a) => a.line !== fulfillment.address),
-  ];
-  const [address, setAddress] = useState<Address | null>(savedAddresses[0] ?? addresses[0]);
+  const currentLine = fulfillment.address.trim();
+  const [extras, setExtras, extrasReady] = useLocalStorage<Address[]>("tk_saved_addresses", []);
+  const [adding, setAdding] = useState(false);
   const [method, setMethod] = useState<Method>("cash");
 
+  const savedAddresses: Address[] = [
+    ...presetAddresses,
+    ...extras.filter((extra) => !presetAddresses.some((a) => a.line === extra.line)),
+  ];
+
+  useEffect(() => {
+    if (!extrasReady || !currentLine) return;
+    if (presetAddresses.some((a) => a.line === currentLine)) return;
+    setExtras((prev) =>
+      prev.some((a) => a.line === currentLine)
+        ? prev
+        : [...prev, { label: nextOtherLabel(prev), line: currentLine }],
+    );
+  }, [currentLine, extrasReady, setExtras]);
+
+  function selectAddress(a: Address) {
+    fulfillment.saveAddress(a.line, "delivery");
+  }
+
+  function addAddress(raw: string) {
+    const line = raw.trim();
+    if (line.length < 4) {
+      snack.show("Enter a street or neighborhood", "error");
+      return;
+    }
+    const preset = presetAddresses.find((a) => a.line.toLowerCase() === line.toLowerCase());
+    if (preset) {
+      selectAddress(preset);
+    } else {
+      const existing = extras.find((a) => a.line.toLowerCase() === line.toLowerCase());
+      const next = existing ?? { label: nextOtherLabel(extras), line };
+      if (!existing) setExtras((prev) => [...prev, next]);
+      selectAddress(next);
+    }
+    setAdding(false);
+  }
+
   function placeOrder() {
-    if (mode === "delivery" && !address) {
+    if (mode === "delivery" && !currentLine) {
       snack.show("Please choose a delivery address", "error");
       return;
     }
@@ -106,25 +152,19 @@ export default function CheckoutPage() {
                 ) : (
                   <div className="mt-3 flex flex-col gap-2">
                     {savedAddresses.map((a) => {
-                      const on = address?.line === a.line;
+                      const on = a.line === currentLine;
                       return (
                         <button
                           key={a.label + a.line}
                           type="button"
-                          onClick={() => {
-                            setAddress(a);
-                            fulfillment.saveAddress(a.line, "delivery");
-                          }}
+                          aria-pressed={on}
+                          onClick={() => selectAddress(a)}
                           className={cn(
                             "flex items-center gap-3 rounded-card border p-3 text-start",
                             on ? "border-primary bg-primary-bg" : "border-border",
                           )}
                         >
-                          <Icon
-                            name={a.label === "Work" ? "case-outline" : "home-2-outline"}
-                            size={20}
-                            className="text-primary"
-                          />
+                          <Icon name={iconFor(a.label)} size={20} className="text-primary" />
                           <span className="flex-1">
                             <span className="block text-sm font-bold text-text">{a.label}</span>
                             <span className="block text-xs text-text-muted">{a.line}</span>
@@ -133,6 +173,18 @@ export default function CheckoutPage() {
                         </button>
                       );
                     })}
+                    {adding ? (
+                      <AddAddressPanel onSave={addAddress} onCancel={() => setAdding(false)} />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setAdding(true)}
+                        className="flex items-center justify-center gap-2 rounded-card border border-dashed border-text-muted py-3 text-sm font-semibold text-text-body hover:bg-card-gray"
+                      >
+                        <Icon name="add-circle-bold" size={18} />
+                        Add new address
+                      </button>
+                    )}
                   </div>
                 )}
               </section>
@@ -162,13 +214,13 @@ export default function CheckoutPage() {
                         >
                           <Icon name={m.icon} size={22} />
                         </span>
-                        <span className="flex-1">
-                          <span className="block text-sm font-bold text-text md:text-base">{m.name}</span>
-                          <span className="block text-xs text-text-muted md:mt-0.5 md:text-sm">{m.sub}</span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block whitespace-nowrap text-xs font-bold text-text">{m.name}</span>
+                          <span className="mt-0.5 block text-[11px] leading-snug text-text-muted">{m.sub}</span>
                         </span>
                         <span
                           className={cn(
-                            "grid h-5 w-5 place-items-center rounded-full border-2",
+                            "grid h-5 w-5 shrink-0 place-items-center rounded-full border-2",
                             on ? "border-primary bg-primary text-white" : "border-text-muted-light",
                           )}
                         >

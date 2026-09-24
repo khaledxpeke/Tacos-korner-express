@@ -26,7 +26,7 @@ export function SiteHeader() {
   const unread = notifications.filter((n) => !n.read).length;
 
   return (
-    <header className="sticky top-0 z-30 hidden border-b border-border bg-card/95 backdrop-blur md:block">
+    <header className="fixed inset-x-0 top-0 z-40 hidden border-b border-border bg-card/95 backdrop-blur md:block">
       <Link
         href="/home"
         className="absolute start-5 top-1/2 z-10 flex -translate-y-1/2 items-center gap-2 md:start-8"
@@ -73,13 +73,21 @@ export function SiteHeader() {
             className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-text-muted"
           />
           <input
-            type="search"
+            type="text"
+            inputMode="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search restaurants, dishes…"
-            className="h-10 w-full rounded-full border border-border bg-bg ps-10 pe-4 text-sm text-text placeholder:text-text-muted outline-none focus:border-primary"
+            className="h-10 w-full rounded-full border border-border bg-bg ps-10 pe-4 text-sm text-text placeholder:text-text-muted outline-none focus:border-amber focus:ring-2 focus:ring-amber/25"
           />
         </form>
+        <Link
+          href="/search"
+          className="hidden h-10 shrink-0 items-center gap-1.5 rounded-full border border-border bg-bg px-3.5 text-sm font-semibold text-text hover:bg-card-gray md:inline-flex"
+        >
+          <Icon name="tuning-2-outline" size={18} />
+          Filters
+        </Link>
 
         <div className="flex items-center gap-1 lg:ms-0 ms-auto">
           <Link

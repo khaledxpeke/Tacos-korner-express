@@ -16,8 +16,8 @@ import {
   type RestaurantsView,
 } from "@/components/home/SeeAllCard";
 import { SearchField } from "@/components/ui/Fields";
+import { Icon } from "@/components/ui/Icon";
 import { EmptyCard } from "@/components/ui/Misc";
-import { Button } from "@/components/ui/Button";
 import { useFulfillment } from "@/context/FulfillmentContext";
 import { categories, products, promos, restaurants } from "@/data/home";
 import type { ProductModel } from "@/data/models";
@@ -59,18 +59,28 @@ export default function HomePage() {
       <AppBar />
       <Page>
         {/* Phone: search field that opens Search (desktop has it in the header) */}
-        <div
-          role="link"
-          tabIndex={0}
-          onClick={() => router.push("/search")}
-          onKeyDown={(e) => e.key === "Enter" && router.push("/search")}
-          className="md:hidden"
-        >
-          <SearchField
-            placeholder="Search restaurants, dishes…"
-            readOnly
-            className="pointer-events-none"
-          />
+        <div className="flex items-center gap-2 md:hidden">
+          <div
+            role="link"
+            tabIndex={0}
+            onClick={() => router.push("/search")}
+            onKeyDown={(e) => e.key === "Enter" && router.push("/search")}
+            className="min-w-0 flex-1"
+          >
+            <SearchField
+              placeholder="Search restaurants, dishes…"
+              readOnly
+              className="pointer-events-none"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push("/search")}
+            className="inline-flex h-12 shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 text-sm font-semibold text-text shadow-card"
+          >
+            <Icon name="tuning-2-outline" size={18} />
+            Filters
+          </button>
         </div>
 
         <div className="mb-6 hidden md:block">
@@ -130,14 +140,14 @@ export default function HomePage() {
                 </div>
               )}
               {matchedRestaurants.length > visibleRestaurants.length && (
-                <Button
-                  title="See all restaurants"
-                  isTransparent
-                  icon="alt-arrow-right-outline"
-                  iconRight
-                  className="mt-3 md:mx-auto md:mt-6 md:w-auto md:px-8"
+                <button
+                  type="button"
                   onClick={() => router.push("/see-all?kind=restaurants")}
-                />
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] border border-dashed border-text-muted bg-transparent py-3 text-sm font-bold text-text hover:bg-card md:mx-auto md:mt-6 md:w-auto md:px-8"
+                >
+                  See all restaurants
+                  <Icon name="alt-arrow-right-outline" size={18} className="rtl:rotate-180" />
+                </button>
               )}
             </>
           ) : (

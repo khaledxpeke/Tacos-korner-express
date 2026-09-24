@@ -46,7 +46,7 @@ export function SeeAllCard({
           <button
             type="button"
             onClick={onSeeAll}
-            className="flex items-center gap-1 text-xs font-semibold text-primary md:rounded-full md:bg-primary-bg md:px-3.5 md:py-1.5 md:text-sm"
+            className="flex items-center gap-1 text-xs font-semibold text-text-body hover:text-text md:rounded-full md:bg-card-gray md:px-3.5 md:py-1.5 md:text-sm"
           >
             See all
             <Icon name="alt-arrow-right-outline" size={14} className="hidden rtl:rotate-180 md:block" />
@@ -77,15 +77,15 @@ export function RestaurantsViewToggle({
         <button
           key={o.v}
           type="button"
-          aria-label={o.label}
           aria-pressed={value === o.v}
           onClick={() => onChange(o.v)}
           className={cn(
-            "grid h-7 w-8 place-items-center rounded-lg transition-colors",
-            value === o.v ? "bg-primary text-white" : "text-text-muted",
+            "flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-colors",
+            value === o.v ? "bg-primary text-white" : "text-text-muted hover:text-text",
           )}
         >
-          <Icon name={o.icon} size={16} />
+          <Icon name={o.icon} size={15} />
+          {o.label}
         </button>
       ))}
     </div>

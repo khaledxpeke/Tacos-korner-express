@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/** Thick-stroke heart. Outline by default, fills red when saved or hovered. */
+/** White outline on photos. Fills brand red when saved or hovered. */
 export function FavoriteHeart({
   saved,
   size = 22,
@@ -15,10 +15,11 @@ export function FavoriteHeart({
       width={size}
       height={size}
       viewBox="0 0 24 24"
-      fill={saved ? "currentColor" : "none"}
       className={cn(
-        "shrink-0 text-white transition-colors group-hover/fav:fill-current group-hover/fav:text-danger",
-        saved && "text-danger",
+        "shrink-0 drop-shadow-md transition-colors",
+        saved
+          ? "fill-primary text-primary"
+          : "fill-none text-white group-hover/fav:fill-primary group-hover/fav:text-primary",
         className,
       )}
       aria-hidden

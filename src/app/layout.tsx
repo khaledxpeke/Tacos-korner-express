@@ -45,7 +45,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${poppins.variable} ${almarai.variable} h-full antialiased`}
+      className={`${poppins.variable} ${almarai.variable} min-h-full antialiased`}
     >
       <body className="flex min-h-dvh flex-col bg-bg text-text">
         <Providers>{children}</Providers>

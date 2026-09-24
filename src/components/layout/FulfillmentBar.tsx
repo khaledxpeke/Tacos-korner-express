@@ -6,7 +6,7 @@ import { Icon } from "@/components/ui/Icon";
 import { useFulfillment, type OrderMode } from "@/context/FulfillmentContext";
 import { cn } from "@/lib/utils";
 
-type AddressHit = { label: string };
+export type AddressHit = { label: string; lat?: number; lng?: number };
 
 function Spinner() {
   return (
@@ -15,6 +15,113 @@ function Spinner() {
       aria-label="Searching"
       className="inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-amber/30 border-t-amber"
     />
+  );
+}
+
+/** Street lookup with amber focus. Used in the header prompt and checkout. */
+export function AddressSuggestField({
+  id,
+  value,
+  onChange,
+  onPick,
+  autoFocus,
+  placeholder = "Street, neighborhood, city",
+}: {
+  id?: string;
+  value: string;
+  onChange: (value: string) => void;
+  onPick?: (hit: AddressHit) => void;
+  autoFocus?: boolean;
+  placeholder?: string;
+}) {
+  const [hits, setHits] = useState<AddressHit[]>([]);
+  const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
+
+  useEffect(() => {
+    const query = value.trim();
+    const ctrl = new AbortController();
+    const timer = setTimeout(async () => {
+      if (query.length < 3) {
+        setHits([]);
+        setStatus("idle");
+        return;
+      }
+      setStatus("loading");
+      try {
+        const res = await fetch(`/api/addresses?q=${encodeURIComponent(query)}`, { signal: ctrl.signal });
+        const data = (await res.json()) as AddressHit[];
+        if (!ctrl.signal.aborted) setHits(Array.isArray(data) ? data : []);
+      } catch {
+        if (!ctrl.signal.aborted) setHits([]);
+      } finally {
+        if (!ctrl.signal.aborted) setStatus("done");
+      }
+    }, 350);
+    return () => {
+      clearTimeout(timer);
+      ctrl.abort();
+    };
+  }, [value]);
+
+  return (
+    <div>
+      <div className="relative">
+        <Icon
+          name="magnifier-outline"
+          size={18}
+          className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-text-muted"
+        />
+        <input
+          id={id}
+          value={value}
+          autoFocus={autoFocus}
+          onChange={(e) => {
+            const next = e.target.value;
+            onChange(next);
+            setHits([]);
+            setStatus(next.trim().length >= 3 ? "loading" : "idle");
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              onPick?.({ label: value });
+            }
+          }}
+          placeholder={placeholder}
+          autoComplete="off"
+          className="h-12 w-full rounded-full border border-border bg-card py-3 ps-11 pe-20 text-sm text-text outline-none transition placeholder:text-text-muted focus:border-amber focus:ring-2 focus:ring-amber/25"
+        />
+        <div className="absolute end-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
+          {status === "loading" && <Spinner />}
+        </div>
+      </div>
+      <div className="mt-3 flex max-h-36 flex-col gap-2 overflow-y-auto">
+        {status === "loading" && hits.length === 0 && (
+          <p className="px-1 text-sm text-text-muted">Looking up addresses…</p>
+        )}
+        {status === "done" && hits.length === 0 && (
+          <p className="px-1 text-sm text-text-muted">No matching addresses. You can still save what you typed.</p>
+        )}
+        {hits.map((item) => (
+          <button
+            key={item.label}
+            type="button"
+            onClick={() => {
+              onChange(item.label);
+              onPick?.(item);
+            }}
+            className={cn(
+              "rounded-[12px] border px-3 py-2.5 text-start text-sm",
+              value === item.label
+                ? "border-primary bg-primary-bg font-semibold text-text"
+                : "border-border text-text-body hover:border-primary",
+            )}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -108,35 +215,7 @@ export function AddressLookup({
   const { mode, address, closeEditor, saveAddress } = useFulfillment();
   const [draft, setDraft] = useState(address);
   const [draftMode, setDraftMode] = useState<OrderMode>(mode);
-  const [hits, setHits] = useState<AddressHit[]>([]);
-  const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
   const canSave = draft.trim().length >= 4;
-
-  useEffect(() => {
-    const query = draft.trim();
-    const ctrl = new AbortController();
-    const timer = setTimeout(async () => {
-      if (query.length < 3) {
-        setHits([]);
-        setStatus("idle");
-        return;
-      }
-      setStatus("loading");
-      try {
-        const res = await fetch(`/api/addresses?q=${encodeURIComponent(query)}`, { signal: ctrl.signal });
-        const data = (await res.json()) as AddressHit[];
-        if (!ctrl.signal.aborted) setHits(Array.isArray(data) ? data : []);
-      } catch {
-        if (!ctrl.signal.aborted) setHits([]);
-      } finally {
-        if (!ctrl.signal.aborted) setStatus("done");
-      }
-    }, 350);
-    return () => {
-      clearTimeout(timer);
-      ctrl.abort();
-    };
-  }, [draft]);
 
   return (
     <>
@@ -158,60 +237,8 @@ export function AddressLookup({
         <label className="mt-4 block text-sm font-semibold text-text" htmlFor="delivery-address">
           Address
         </label>
-        <div className="relative mt-1.5">
-          <input
-            id="delivery-address"
-            value={draft}
-            onChange={(e) => {
-              const next = e.target.value;
-              setDraft(next);
-              setHits([]);
-              setStatus(next.trim().length >= 3 ? "loading" : "idle");
-            }}
-            placeholder="Street, neighborhood, city"
-            autoComplete="off"
-            className="h-12 w-full rounded-[12px] border border-border bg-bg px-4 pe-20 text-sm text-text outline-none focus:border-amber focus:ring-2 focus:ring-amber/25"
-          />
-          <div className="absolute end-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
-            {status === "loading" && <Spinner />}
-            {draft.length > 0 && (
-              <button
-                type="button"
-                aria-label="Clear address"
-                onClick={() => {
-                  setDraft("");
-                  setHits([]);
-                  setStatus("idle");
-                }}
-                className="grid h-8 w-8 place-items-center rounded-full text-text-muted hover:bg-card-gray hover:text-text"
-              >
-                <Icon name="close-circle-bold" size={18} />
-              </button>
-            )}
-          </div>
-        </div>
-        <div className="mt-3 flex max-h-56 flex-col gap-2 overflow-y-auto">
-          {status === "loading" && hits.length === 0 && (
-            <p className="px-1 text-sm text-text-muted">Looking up addresses…</p>
-          )}
-          {status === "done" && hits.length === 0 && (
-            <p className="px-1 text-sm text-text-muted">No matching addresses. You can still save what you typed.</p>
-          )}
-          {hits.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              onClick={() => setDraft(item.label)}
-              className={cn(
-                "rounded-[12px] border px-3 py-2.5 text-start text-sm",
-                draft === item.label
-                  ? "border-primary bg-primary-bg font-semibold text-text"
-                  : "border-border text-text-body hover:border-primary",
-              )}
-            >
-              {item.label}
-            </button>
-          ))}
+        <div className="mt-1.5">
+          <AddressSuggestField id="delivery-address" value={draft} onChange={setDraft} />
         </div>
 
         <Button
