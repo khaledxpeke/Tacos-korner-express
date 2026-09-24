@@ -28,11 +28,13 @@ function walk(dir, acc = []) {
 const names = new Set();
 const candidates = new Set();
 const suffix = /-(outline|bold|linear|broken|bold-duotone|line-duotone)$/;
+// Tailwind utilities like `font-bold` look like Solar names. Solar has no `font-*` icons.
+const skip = /^font-/;
 for (const file of walk(srcDir)) {
   const text = readFileSync(file, "utf8");
   for (const m of text.matchAll(/["'`]([a-z0-9]+(?:-[a-z0-9]+)+)["'`]/g)) {
     const n = m[1];
-    if (!suffix.test(n)) continue;
+    if (!suffix.test(n) || skip.test(n)) continue;
     candidates.add(n);
     if (solar.icons[n] || solar.aliases?.[n]) names.add(n);
   }
