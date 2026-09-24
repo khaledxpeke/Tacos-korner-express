@@ -45,7 +45,7 @@ export function AuthBrandPanel() {
           </span>
         ))}
       </div>
-      <Link href="/home" className="relative z-10 flex items-center gap-3">
+      <Link href="/" className="relative z-10 flex items-center gap-3">
         <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white">
           <Image src="/images/logo/logo_foreground.png" alt="" width={40} height={40} />
         </span>
@@ -60,7 +60,7 @@ export function AuthBrandPanel() {
               src={s.image}
               alt=""
               fill
-              priority={k === 0}
+              loading={k === 0 ? "eager" : undefined}
               sizes="50vw"
               className={cn(
                 "object-cover transition-opacity duration-700",

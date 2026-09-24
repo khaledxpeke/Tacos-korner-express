@@ -61,7 +61,7 @@ export const orders: OrderModel[] = [
         name: "Spicy Tuna Roll (8pc)",
         quantity: 1,
         imageUrl:
-          "https://images.unsplash.com/photo-1617196034183-421b4040ed20?w=300&q=80",
+          "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=300&q=80",
       },
       {
         name: "Dragon Roll (8pc)",

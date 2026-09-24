@@ -15,7 +15,7 @@ export function AppBar() {
         alt="Takos Korner"
         width={40}
         height={40}
-        priority
+        loading="eager"
       />
       <span className="text-lg font-bold text-text">Takos Korner</span>
       <span className="flex-1" />

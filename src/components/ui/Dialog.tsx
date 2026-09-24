@@ -109,7 +109,7 @@ export function BottomSheet({
   if (!open) return null;
   return (
     <div
-      className="fade-in fixed inset-0 z-50 flex items-end justify-center bg-black/50"
+      className="fade-in fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center md:p-6"
       onClick={onClose}
     >
       <div
@@ -117,12 +117,12 @@ export function BottomSheet({
         aria-modal
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          "slide-up max-h-[88dvh] w-full max-w-[600px] overflow-y-auto rounded-t-[24px] bg-card pb-[max(1.25rem,env(safe-area-inset-bottom))]",
+          "slide-up max-h-[88dvh] w-full max-w-[600px] overflow-y-auto rounded-t-[24px] bg-card pb-[max(1.25rem,env(safe-area-inset-bottom))] md:rounded-2xl md:pb-6 md:shadow-xl",
           className,
         )}
       >
-        <div className="sticky top-0 z-10 bg-card pt-3">
-          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border" />
+        <div className="sticky top-0 z-10 bg-card pt-3 md:rounded-t-2xl">
+          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border md:hidden" />
           {title && (
             <div className="flex items-center justify-between px-5 pb-3">
               <h2 className="text-base font-bold text-text">{title}</h2>

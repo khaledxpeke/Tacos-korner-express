@@ -6,7 +6,7 @@ import { AppBar } from "@/components/layout/AppBar";
 import { Page } from "@/components/layout/Page";
 import { CategoryCard } from "@/components/home/CategoryCard";
 import { ProductCard } from "@/components/home/ProductCard";
-import { PromoCarousel, PromoMiniCard } from "@/components/home/PromoCard";
+import { PromoCarousel } from "@/components/home/PromoCard";
 import { RestaurantCard } from "@/components/home/RestaurantCard";
 import { PickupBrowse } from "@/components/home/PickupBrowse";
 import { RestaurantsMap } from "@/components/home/RestaurantsMap";
@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/Button";
 import { useFulfillment } from "@/context/FulfillmentContext";
 import { categories, products, promos, restaurants } from "@/data/home";
 import type { ProductModel } from "@/data/models";
-import { productsForMode, restaurantsForMode } from "@/lib/restaurants";
+import { productsForMode, restaurantMatchesCategory, restaurantsForMode } from "@/lib/restaurants";
 
 export default function HomePage() {
   const router = useRouter();
@@ -38,8 +38,12 @@ export default function HomePage() {
   const allNew = byCategory(availableProducts.filter((p) => p.isNew));
   const allPopular = byCategory(availableProducts.filter((p) => p.isFeatured));
   const newArrivals = allNew.slice(0, 4);
-  const popular = allPopular.slice(0, 4);
-  const visibleRestaurants = availableRestaurants.slice(0, 6);
+  const newIds = new Set(newArrivals.map((p) => p.id));
+  const popular = allPopular.filter((p) => !newIds.has(p.id)).slice(0, 4);
+  const matchedRestaurants = availableRestaurants.filter((r) =>
+    restaurantMatchesCategory(r, category, availableProducts),
+  );
+  const visibleRestaurants = matchedRestaurants.slice(0, 6);
 
   if (mode === "pickup") {
     return (
@@ -79,11 +83,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="mt-5 md:mt-0">
-          <PromoCarousel promos={promos} />
-        </div>
-
-        <div className="no-scrollbar -mx-5 mt-4 flex gap-2.5 overflow-x-auto px-5 py-1 md:mx-0 md:mt-10 md:grid md:grid-cols-9 md:gap-3 md:overflow-visible md:px-0 md:py-0">
+        <div className="no-scrollbar -mx-5 mt-1 flex gap-2.5 overflow-x-auto px-5 py-1 md:mx-0 md:mt-0 md:grid md:grid-cols-9 md:gap-3 md:overflow-visible md:px-0 md:py-0">
           <CategoryCard
             category={{ name: "All", icon: "🍽️", color: "#F0F2F5" }}
             active={category === null}
@@ -99,33 +99,16 @@ export default function HomePage() {
           ))}
         </div>
 
-        <ProductSection
-          title="New Arrivals"
-          icon="course-up-bold"
-          iconClass="text-blue"
-          items={newArrivals}
-          onSeeAll={() => router.push("/see-all?kind=new")}
-        />
-        <ProductSection
-          title="Popular Near You"
-          icon="star-bold"
-          iconClass="text-amber"
-          items={popular}
-          onSeeAll={() => router.push("/see-all?kind=popular")}
-        />
-
-        <section className="mt-5 md:mt-12">
+        <section className="mt-5 md:mt-8">
           <SeeAllCard title="Today's offers" icon="gift-bold" iconClass="text-purple" />
-          <div className="no-scrollbar -mx-5 mt-2.5 flex gap-2.5 overflow-x-auto px-5 md:mx-0 md:mt-4 md:grid md:grid-cols-3 md:gap-5 md:px-0">
-            {promos.map((p) => (
-              <PromoMiniCard key={p.title} promo={p} wide />
-            ))}
+          <div className="mt-2.5 md:mt-4">
+            <PromoCarousel promos={promos} compact />
           </div>
         </section>
 
         <SeeAllCard
           className="mt-5 md:mt-8"
-          title="All Restaurants"
+          title="Restaurants near you"
           icon="shop-bold"
           iconClass="text-primary"
           trailing={<RestaurantsViewToggle value={view} onChange={setView} />}
@@ -141,12 +124,12 @@ export default function HomePage() {
                 />
               ) : (
                 <div className="grid gap-3 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
-                  {visibleRestaurants.map((r) => (
-                    <RestaurantCard key={r.id} restaurant={r} />
+                  {visibleRestaurants.map((r, i) => (
+                    <RestaurantCard key={r.id} restaurant={r} eager={i === 0} />
                   ))}
                 </div>
               )}
-              {availableRestaurants.length > visibleRestaurants.length && (
+              {matchedRestaurants.length > visibleRestaurants.length && (
                 <Button
                   title="See all restaurants"
                   isTransparent
@@ -164,6 +147,21 @@ export default function HomePage() {
             />
           )}
         </div>
+
+        <ProductSection
+          title="New Arrivals"
+          icon="course-up-bold"
+          iconClass="text-blue"
+          items={newArrivals}
+          onSeeAll={() => router.push("/see-all?kind=new")}
+        />
+        <ProductSection
+          title="Popular Near You"
+          icon="star-bold"
+          iconClass="text-amber"
+          items={popular}
+          onSeeAll={() => router.push("/see-all?kind=popular")}
+        />
       </Page>
     </>
   );
@@ -199,8 +197,8 @@ function ProductSection({
           />
         ) : (
           <div className="no-scrollbar -mx-5 flex gap-2.5 overflow-x-auto px-5 pb-1 md:mx-0 md:grid md:grid-cols-2 md:gap-6 md:overflow-visible md:px-0 lg:grid-cols-4">
-            {items.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            {items.map((p, i) => (
+              <ProductCard key={p.id} product={p} eager={i === 0} />
             ))}
           </div>
         )}

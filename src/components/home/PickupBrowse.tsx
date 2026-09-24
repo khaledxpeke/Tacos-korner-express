@@ -83,7 +83,7 @@ export function PickupBrowse({ restaurants }: { restaurants: RestaurantModel[] }
             />
           ) : (
             <div className="grid gap-4 lg:grid-cols-2">
-              {restaurants.map((restaurant) => (
+              {restaurants.map((restaurant, i) => (
                 <div
                   key={restaurant.id}
                   ref={(node) => {
@@ -94,7 +94,11 @@ export function PickupBrowse({ restaurants }: { restaurants: RestaurantModel[] }
                     activeId === restaurant.id && "ring-2 ring-primary ring-offset-2 ring-offset-bg",
                   )}
                 >
-                  <RestaurantCard restaurant={restaurant} onClick={() => openRestaurant(restaurant)} />
+                  <RestaurantCard
+                    restaurant={restaurant}
+                    eager={i === 0}
+                    onClick={() => openRestaurant(restaurant)}
+                  />
                 </div>
               ))}
             </div>

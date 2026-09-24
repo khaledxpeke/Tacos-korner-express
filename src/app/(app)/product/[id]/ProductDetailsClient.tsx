@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Container } from "@/components/layout/Container";
 import { PageFooter } from "@/components/layout/Page";
-import { ProductHero } from "@/components/product/ProductHero";
 import { ReviewCard } from "@/components/restaurant/ReviewCard";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
@@ -17,7 +16,7 @@ import { useSnackbar } from "@/context/SnackbarContext";
 import { productsOfRestaurant, restaurantOf } from "@/data/home";
 import type { ProductModel } from "@/data/models";
 import { reviewsOf } from "@/data/reviews";
-import { money } from "@/lib/utils";
+import { cn, money } from "@/lib/utils";
 import { ProductCard } from "@/components/home/ProductCard";
 
 /** Mirrors `product_details_screen.dart`. Desktop: image left, details right. */
@@ -46,33 +45,68 @@ export function ProductDetailsClient({ product }: { product: ProductModel }) {
       customizations: [],
     });
     snack.show(`${product.name} added to cart`, "success");
-    router.push("/cart");
   }
+
+  const share = () => {
+    const url = window.location.href;
+    if (navigator.share) navigator.share({ title: product.name, url }).catch(() => {});
+    else {
+      navigator.clipboard?.writeText(url);
+      snack.show("Link copied", "success");
+    }
+  };
 
   const total = product.price * qty;
 
   return (
     <>
-      {/* Phone hero */}
-      <div className="md:hidden">
-        <ProductHero
-          product={product}
-          isFav={isFav}
-          onFavToggle={() => toggleProduct(product.name)}
+      <div className="relative h-56 w-full md:hidden">
+        <SafeImage
+          src={product.image}
+          alt={product.name}
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
         />
       </div>
 
       <main className="flex-1">
         <Container className="py-5 md:py-8">
-          <nav className="mb-6 hidden items-center gap-2 text-sm text-text-muted md:flex">
-            <Link href="/home" className="hover:text-primary">Home</Link>
-            <Icon name="alt-arrow-right-outline" size={14} className="rtl:rotate-180" />
-            <Link href={`/restaurant/${restaurant.id}`} className="hover:text-primary">
-              {restaurant.name}
-            </Link>
-            <Icon name="alt-arrow-right-outline" size={14} className="rtl:rotate-180" />
-            <span className="text-text">{product.name}</span>
-          </nav>
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <nav className="flex items-center gap-2 text-sm text-text-muted">
+              <Link href="/home" className="hover:text-primary">Home</Link>
+              <Icon name="alt-arrow-right-outline" size={14} className="rtl:rotate-180" />
+              <Link href={`/restaurant/${restaurant.id}`} className="hover:text-primary">
+                {restaurant.name}
+              </Link>
+              <Icon name="alt-arrow-right-outline" size={14} className="hidden rtl:rotate-180 md:inline" />
+              <span className="hidden text-text md:inline">{product.name}</span>
+            </nav>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => toggleProduct(product.name)}
+                className={cn(
+                  "inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition",
+                  isFav
+                    ? "border-primary bg-primary-bg text-primary"
+                    : "border-border bg-card text-text hover:border-primary hover:text-primary",
+                )}
+              >
+                <Icon name={isFav ? "heart-bold" : "heart-outline"} size={16} />
+                {isFav ? "Saved" : "Save"}
+              </button>
+              <button
+                type="button"
+                onClick={share}
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-semibold text-text transition hover:border-primary hover:text-primary"
+              >
+                <Icon name="share-outline" size={16} />
+                Share
+              </button>
+            </div>
+          </div>
 
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-[1.1fr_1fr]">
             {/* Desktop image */}
@@ -90,14 +124,6 @@ export function ProductDetailsClient({ product }: { product: ProductModel }) {
                   NEW
                 </span>
               )}
-              <button
-                type="button"
-                aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
-                onClick={() => toggleProduct(product.name)}
-                className="absolute end-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-card shadow-card"
-              >
-                <Icon name="heart-bold" size={22} className={isFav ? "text-danger" : "text-text-muted-light"} />
-              </button>
             </div>
 
             <div>
@@ -223,8 +249,8 @@ export function ProductDetailsClient({ product }: { product: ProductModel }) {
                 More from {restaurant.name}
               </h2>
               <div className="no-scrollbar -mx-5 mt-3 flex gap-2.5 overflow-x-auto px-5 pb-1 md:mx-0 md:grid md:grid-cols-3 md:gap-5 md:px-0 lg:grid-cols-4">
-                {more.map((p) => (
-                  <ProductCard key={p.id} product={p} />
+                {more.map((p, i) => (
+                  <ProductCard key={p.id} product={p} eager={i === 0} />
                 ))}
               </div>
             </section>

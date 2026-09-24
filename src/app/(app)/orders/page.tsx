@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BackAppBar } from "@/components/layout/BackAppBar";
 import { Page } from "@/components/layout/Page";
@@ -7,8 +8,11 @@ import { OrdersViewToggle } from "@/components/orders/OrdersViewToggle";
 import { Icon } from "@/components/ui/Icon";
 import { Badge, EmptyCard } from "@/components/ui/Misc";
 import { SafeImage } from "@/components/ui/SafeImage";
+import { useCart } from "@/context/CartContext";
+import { useSnackbar } from "@/context/SnackbarContext";
 import type { OrderModel, OrderStatus } from "@/data/models";
 import { activeStatuses, orderStatusLabel, orders } from "@/data/orders";
+import { cartItemsFromOrder } from "@/lib/orders";
 import { cn, money } from "@/lib/utils";
 
 type View = "active" | "past";
@@ -63,8 +67,24 @@ export default function OrdersPage() {
 }
 
 function OrderCard({ order }: { order: OrderModel }) {
+  const router = useRouter();
+  const cart = useCart();
+  const snack = useSnackbar();
   const isActive = activeStatuses.includes(order.status);
   const idx = steps.indexOf(order.status);
+
+  function reorder() {
+    const lines = cartItemsFromOrder(order);
+    if (lines.length === 0 || lines.some((l) => l.price <= 0)) {
+      snack.show("This order can't be rebuilt from the current menu", "warning");
+      return;
+    }
+    cart.addItems(lines);
+    const count = lines.reduce((n, l) => n + l.quantity, 0);
+    snack.show(`${count} items from ${order.restaurantName} added to cart`, "success");
+    router.push("/cart");
+  }
+
   return (
     <article className="rounded-2xl border-[0.5px] border-border bg-card p-4 shadow-card md:p-6">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
@@ -128,6 +148,12 @@ function OrderCard({ order }: { order: OrderModel }) {
           {isActive ? (
             <button
               type="button"
+              onClick={() =>
+                snack.show(
+                  `${orderStatusLabel[order.status]} · ${order.restaurantName} is on it`,
+                  "info",
+                )
+              }
               className="flex items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-white"
             >
               <Icon name="routing-outline" size={18} />
@@ -136,6 +162,7 @@ function OrderCard({ order }: { order: OrderModel }) {
           ) : (
             <button
               type="button"
+              onClick={reorder}
               className="flex items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-white"
             >
               <Icon name="restart-outline" size={18} />
@@ -144,6 +171,7 @@ function OrderCard({ order }: { order: OrderModel }) {
           )}
           <button
             type="button"
+            onClick={() => router.push("/help")}
             className="flex items-center justify-center gap-2 rounded-xl bg-card-gray py-3 text-sm font-bold text-text"
           >
             <Icon name="question-circle-outline" size={18} />

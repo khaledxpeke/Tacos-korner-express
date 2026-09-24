@@ -13,10 +13,12 @@ export function RestaurantCard({
   restaurant,
   onClick,
   className,
+  eager,
 }: {
   restaurant: RestaurantModel;
   onClick?: () => void;
   className?: string;
+  eager?: boolean;
 }) {
   const router = useRouter();
   const { isRestaurantFavorite, toggleRestaurant } = useFavorites();
@@ -40,6 +42,7 @@ export function RestaurantCard({
           alt={restaurant.name}
           fill
           sizes="(max-width: 640px) 100vw, 600px"
+          loading={eager ? "eager" : undefined}
           className="object-cover"
         />
         <button

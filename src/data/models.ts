@@ -64,6 +64,8 @@ export interface PromoModel {
   color: string;
   image: string;
   cta: string;
+  href?: string;
+  code?: string;
 }
 
 export type OrderStatus =

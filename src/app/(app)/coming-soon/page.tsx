@@ -14,7 +14,7 @@ export default async function ComingSoonPage({
   const { feature } = await searchParams;
   return (
     <>
-      <BackAppBar title={feature ?? "Coming soon"} fallbackHref="/settings" />
+      <BackAppBar title={feature ?? "Coming soon"} fallbackHref="/home" />
       <Page size="sm" className="flex flex-1 flex-col items-center justify-center text-center">
         <span className="grid h-24 w-24 place-items-center rounded-full bg-primary-bg text-primary">
           <Icon name="rocket-2-bold" size={48} />

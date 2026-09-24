@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CartLine } from "@/components/cart/CartLine";
+import { ProductCard } from "@/components/home/ProductCard";
 import { Container } from "@/components/layout/Container";
 import { ReceiptSummaryCard } from "@/components/orders/ReceiptSummaryCard";
 import { Button } from "@/components/ui/Button";
@@ -11,7 +12,10 @@ import { TextArea } from "@/components/ui/Fields";
 import { Icon } from "@/components/ui/Icon";
 import { EmptyCard, SelectableChip } from "@/components/ui/Misc";
 import { useCart } from "@/context/CartContext";
+import { useFulfillment } from "@/context/FulfillmentContext";
 import { useSnackbar } from "@/context/SnackbarContext";
+import { products } from "@/data/home";
+import { productsForMode } from "@/lib/restaurants";
 import { money } from "@/lib/utils";
 
 /** Mirrors `cart_screen.dart`. Desktop: lines left, summary right. */
@@ -19,6 +23,10 @@ export default function CartPage() {
   const router = useRouter();
   const cart = useCart();
   const snack = useSnackbar();
+  const { mode } = useFulfillment();
+  const suggestions = productsForMode(mode, products)
+    .filter((p) => p.isFeatured)
+    .slice(0, 4);
   const [confirmClear, setConfirmClear] = useState(false);
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState(false);
@@ -65,13 +73,46 @@ export default function CartPage() {
       <main className="flex-1">
         <Container className="py-5 md:py-6">
           {empty ? (
-            <div className="mx-auto max-w-md">
-              <EmptyCard
-                icon="cart-large-2-outline"
-                title="Your cart is empty"
-                message="Browse restaurants and add items to get started."
-                action={<Button title="Browse Food" onClick={() => router.push("/home")} />}
-              />
+            <div>
+              <div className="mx-auto max-w-md">
+                <EmptyCard
+                  icon="cart-large-2-outline"
+                  title="Your cart is empty"
+                  message="Pick a restaurant or add one of the dishes people order most."
+                  action={
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Button title="Browse restaurants" onClick={() => router.push("/home")} />
+                      <Button
+                        title="Popular dishes"
+                        isTransparent
+                        onClick={() => router.push("/see-all?kind=popular")}
+                      />
+                    </div>
+                  }
+                />
+              </div>
+              {suggestions.length > 0 && (
+                <section className="mt-8">
+                  <div className="flex items-end justify-between gap-3">
+                    <div>
+                      <h2 className="text-base font-extrabold text-text md:text-xl">Popular right now</h2>
+                      <p className="mt-0.5 text-sm text-text-muted">Add something and come back to checkout.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => router.push("/see-all?kind=popular")}
+                      className="shrink-0 text-sm font-semibold text-primary"
+                    >
+                      See all
+                    </button>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5">
+                    {suggestions.map((p, i) => (
+                      <ProductCard key={p.id} product={p} grid eager={i === 0} />
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
           ) : (
             <div className="grid gap-6 lg:grid-cols-[1fr_400px]">

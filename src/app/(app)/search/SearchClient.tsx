@@ -203,17 +203,19 @@ export function SearchClient({
                 </ul>
               </>
             )}
-            <span className="mt-5 block text-xs font-bold tracking-wide text-text-muted md:text-sm md:tracking-normal">
-              Browse categories
-            </span>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {categories.map((c) => (
-                <SelectableChip
-                  key={c.name}
-                  label={c.name}
-                  onClick={() => setFilters((f) => ({ ...f, category: c.name }))}
-                />
-              ))}
+            <div className="lg:hidden">
+              <span className="mt-5 block text-xs font-bold tracking-wide text-text-muted md:text-sm md:tracking-normal">
+                Browse categories
+              </span>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {categories.map((c) => (
+                  <SelectableChip
+                    key={c.name}
+                    label={c.name}
+                    onClick={() => setFilters((f) => ({ ...f, category: c.name }))}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         ) : (
@@ -235,8 +237,8 @@ export function SearchClient({
                   />
                 ) : (
                   <div className="mt-2 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5 lg:grid-cols-4">
-                    {dishResults.map((p) => (
-                      <ProductCard key={p.id} product={p} grid />
+                    {dishResults.map((p, i) => (
+                      <ProductCard key={p.id} product={p} grid eager={i === 0} />
                     ))}
                   </div>
                 )}
@@ -261,10 +263,11 @@ export function SearchClient({
                   />
                 ) : (
                   <div className="mt-2 grid gap-3 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
-                    {restaurantResults.map((r) => (
+                    {restaurantResults.map((r, i) => (
                       <RestaurantCard
                         key={r.id}
                         restaurant={r}
+                        eager={i === 0}
                         onClick={() => router.push(`/restaurant/${r.id}`)}
                       />
                     ))}

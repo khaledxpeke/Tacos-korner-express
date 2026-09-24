@@ -17,3 +17,17 @@ export function productsForMode(mode: OrderMode, list: ProductModel[]) {
   const hidden = new Set(restaurants.filter((r) => !offersDelivery(r)).map((r) => r.id));
   return list.filter((p) => !hidden.has(p.restaurantId));
 }
+
+/** Home chip: cuisine name, or the kitchen actually serves that category. */
+export function restaurantMatchesCategory(
+  restaurant: RestaurantModel,
+  category: string | null,
+  menu: ProductModel[],
+) {
+  if (!category) return true;
+  const needle = category.toLowerCase();
+  if (restaurant.cuisine.toLowerCase().includes(needle) || restaurant.name.toLowerCase().includes(needle)) {
+    return true;
+  }
+  return menu.some((p) => p.restaurantId === restaurant.id && p.category.toLowerCase() === needle);
+}

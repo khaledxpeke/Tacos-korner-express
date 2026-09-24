@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { SelectableChip } from "@/components/ui/Misc";
+import { useFulfillment } from "@/context/FulfillmentContext";
 import { useSnackbar } from "@/context/SnackbarContext";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +40,7 @@ const genders = [
 export default function RegistrationDetailsPage() {
   const router = useRouter();
   const snack = useSnackbar();
+  const { saveAddress } = useFulfillment();
   const [step, setStep] = useState(0);
   const name = useSyncExternalStore(subscribeNothing, readRegisterFirstName, () => "");
   const [address, setAddress] = useState<AddressForm>({
@@ -62,6 +64,8 @@ export default function RegistrationDetailsPage() {
       return;
     }
     window.localStorage.setItem("tk_onboarded", "1");
+    const line = [address.street, address.city, address.postalCode].filter(Boolean).join(", ");
+    if (line) saveAddress(line, "delivery");
     snack.show("Account created — welcome!", "success");
     router.push("/home");
   }

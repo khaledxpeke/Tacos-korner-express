@@ -53,8 +53,8 @@ export function SeeAllClient({ kind }: { kind: SeeAllKind }) {
             />
           ) : (
             <div className="grid gap-3 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
-              {availableRestaurants.map((r) => (
-                <RestaurantCard key={r.id} restaurant={r} />
+              {availableRestaurants.map((r, i) => (
+                <RestaurantCard key={r.id} restaurant={r} eager={i === 0} />
               ))}
             </div>
           )
@@ -70,8 +70,8 @@ export function SeeAllClient({ kind }: { kind: SeeAllKind }) {
           />
         ) : (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5 lg:grid-cols-4">
-            {items.map((p) => (
-              <ProductCard key={p.id} product={p} grid />
+            {items.map((p, i) => (
+              <ProductCard key={p.id} product={p} grid eager={i === 0} />
             ))}
           </div>
         )}

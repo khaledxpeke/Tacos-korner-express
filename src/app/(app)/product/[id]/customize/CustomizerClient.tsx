@@ -4,14 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Container } from "@/components/layout/Container";
-import { ProductHero } from "@/components/product/ProductHero";
 import { Button } from "@/components/ui/Button";
 import { TextArea } from "@/components/ui/Fields";
 import { Icon } from "@/components/ui/Icon";
 import { Badge, QtyStepper } from "@/components/ui/Misc";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { useCart } from "@/context/CartContext";
-import { useFavorites } from "@/context/FavoritesContext";
 import { useSnackbar } from "@/context/SnackbarContext";
 import { restaurantOf } from "@/data/home";
 import type { CartCustomization, CartItem, IngredientModel, ProductModel, ProductTypeModel } from "@/data/models";
@@ -29,7 +27,6 @@ export function CustomizerClient({
 }) {
   const router = useRouter();
   const cart = useCart();
-  const { isProductFavorite, toggleProduct } = useFavorites();
   const snack = useSnackbar();
   const restaurant = restaurantOf(product);
 
@@ -107,23 +104,24 @@ export function CustomizerClient({
     if (editing) {
       cart.replaceItem(editing.id, item);
       snack.show("Cart updated", "success");
+      router.push("/cart");
     } else {
       cart.addItem(item);
       snack.show(`${product.name} added to cart`, "success");
+      router.push(`/restaurant/${restaurant.id}`);
     }
-    router.push("/cart");
   }
-
-  const isFav = isProductFavorite(product.name);
 
   return (
     <>
-      <div className="md:hidden">
-        <ProductHero
-          product={product}
-          isFav={isFav}
-          onFavToggle={() => toggleProduct(product.name)}
-          height={220}
+      <div className="relative h-48 w-full md:hidden">
+        <SafeImage
+          src={product.image}
+          alt={product.name}
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
         />
       </div>
 

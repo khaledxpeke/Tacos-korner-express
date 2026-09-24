@@ -80,16 +80,32 @@ function ModeButton({
   );
 }
 
-/** Asks for an address after sign-in or Continue as guest, and when the address chip is opened. */
+/** Opens only when the user taps the address chip — first visit uses the welcome page. */
 export function AddressPrompt() {
-  const ctx = useFulfillment();
-  const open = ctx.needsAddress || ctx.editorOpen;
-  if (!open) return null;
-  return <AddressForm />;
+  const { editorOpen } = useFulfillment();
+  if (!editorOpen) return null;
+  return (
+    <div className="fade-in fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
+      <div
+        role="dialog"
+        aria-modal
+        aria-labelledby="address-title"
+        className="w-full max-w-md rounded-[24px] bg-card p-6 shadow-lg"
+      >
+        <AddressLookup cancelable />
+      </div>
+    </div>
+  );
 }
 
-function AddressForm() {
-  const { mode, address, needsAddress, closeEditor, saveAddress } = useFulfillment();
+export function AddressLookup({
+  cancelable,
+  onSaved,
+}: {
+  cancelable?: boolean;
+  onSaved?: () => void;
+}) {
+  const { mode, address, closeEditor, saveAddress } = useFulfillment();
   const [draft, setDraft] = useState(address);
   const [draftMode, setDraftMode] = useState<OrderMode>(mode);
   const [hits, setHits] = useState<AddressHit[]>([]);
@@ -123,13 +139,7 @@ function AddressForm() {
   }, [draft]);
 
   return (
-    <div className="fade-in fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
-      <div
-        role="dialog"
-        aria-modal
-        aria-labelledby="address-title"
-        className="w-full max-w-md rounded-[24px] bg-card p-6 shadow-lg"
-      >
+    <>
         <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary-bg text-primary">
           <Icon name="map-point-bold" size={24} />
         </div>
@@ -137,7 +147,7 @@ function AddressForm() {
           Where are you?
         </h2>
         <p className="mt-1 text-sm text-text-muted">
-          Delivery hides kitchens that only offer pickup. Pickup shows every restaurant.
+          We need a street or neighborhood before we can show kitchens around you.
         </p>
 
         <div className="mt-5 grid grid-cols-2 gap-1 rounded-2xl bg-card-gray p-1">
@@ -205,12 +215,15 @@ function AddressForm() {
         </div>
 
         <Button
-          title={draftMode === "delivery" ? "Deliver here" : "Use this area"}
+          title={draftMode === "delivery" ? "See restaurants nearby" : "Show pickup kitchens"}
           className="mt-5"
           isDisabled={!canSave}
-          onClick={() => saveAddress(draft, draftMode)}
+          onClick={() => {
+            saveAddress(draft, draftMode);
+            onSaved?.();
+          }}
         />
-        {!needsAddress && (
+        {cancelable && (
           <button
             type="button"
             onClick={closeEditor}
@@ -219,7 +232,6 @@ function AddressForm() {
             Cancel
           </button>
         )}
-      </div>
-    </div>
+    </>
   );
 }

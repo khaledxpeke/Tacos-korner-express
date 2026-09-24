@@ -74,7 +74,7 @@ export function CachedImage({
         alt={alt}
         fill
         sizes={sizes}
-        priority={priority}
+        loading={priority ? "eager" : undefined}
         className="object-cover"
       />
     </span>
@@ -311,7 +311,7 @@ export function ListTile({
     muted: "bg-card-gray text-text-muted",
     danger: "bg-danger-bg text-danger",
   };
-  const content = (
+  const label = (
     <>
       <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-[12px]", tones[iconTone])}>
         <Icon name={icon} size={20} />
@@ -322,26 +322,45 @@ export function ListTile({
           <span className="block truncate text-xs text-text-muted md:text-sm">{subtitle}</span>
         )}
       </span>
-      {trailing ?? (
-        <Icon
-          name="alt-arrow-right-outline"
-          size={18}
-          className="text-text-muted rtl:rotate-180"
-        />
-      )}
     </>
   );
+  const arrow = (
+    <Icon name="alt-arrow-right-outline" size={18} className="text-text-muted rtl:rotate-180" />
+  );
   const cls = cn("flex w-full items-center gap-3 px-4 py-3 text-start md:px-5 md:py-4", className);
+
+  // Custom trailing (switch, etc.) sits outside the row control so we never nest <button>.
+  if (trailing) {
+    return (
+      <div className={cls}>
+        {href ? (
+          <Link href={href} className="flex min-w-0 flex-1 items-center gap-3">
+            {label}
+          </Link>
+        ) : onClick ? (
+          <button type="button" onClick={onClick} className="flex min-w-0 flex-1 items-center gap-3 text-start">
+            {label}
+          </button>
+        ) : (
+          <div className="flex min-w-0 flex-1 items-center gap-3">{label}</div>
+        )}
+        {trailing}
+      </div>
+    );
+  }
+
   if (href) {
     return (
       <Link href={href} className={cls}>
-        {content}
+        {label}
+        {arrow}
       </Link>
     );
   }
   return (
     <button type="button" onClick={onClick} className={cls}>
-      {content}
+      {label}
+      {arrow}
     </button>
   );
 }

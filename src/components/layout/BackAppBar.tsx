@@ -56,10 +56,10 @@ export function BackAppBar({
           onClick={back}
           aria-label="Back"
           className={cn(
-            "grid h-10 w-10 shrink-0 place-items-center rounded-full",
+            "grid h-10 w-10 shrink-0 place-items-center rounded-full md:hidden",
             transparent
-              ? "bg-black/35 text-white backdrop-blur md:bg-card md:text-text md:shadow-card"
-              : "bg-card-gray text-text md:bg-card md:shadow-card",
+              ? "bg-black/35 text-white backdrop-blur"
+              : "bg-card-gray text-text",
           )}
         >
           <Icon name="alt-arrow-left-outline" size={22} className="rtl:rotate-180" />

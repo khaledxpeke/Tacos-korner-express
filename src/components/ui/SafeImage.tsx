@@ -9,8 +9,9 @@ import { cn } from "@/lib/utils";
  * next/image with an error fallback so a broken remote URL never shows alt text over the card.
  * Mirrors the placeholder behavior of `custom_cashed_image.dart`.
  */
-export function SafeImage({ className, alt, ...rest }: ImageProps) {
+export function SafeImage({ className, alt, priority, loading, ...rest }: ImageProps) {
   const [failed, setFailed] = useState(false);
+  const eager = Boolean(priority) || loading === "eager";
   if (failed) {
     return (
       <span
@@ -28,6 +29,7 @@ export function SafeImage({ className, alt, ...rest }: ImageProps) {
     <Image
       alt={alt}
       className={className}
+      loading={eager ? "eager" : loading}
       onError={() => setFailed(true)}
       {...rest}
     />

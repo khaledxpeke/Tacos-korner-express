@@ -1,41 +1,56 @@
 "use client";
 
-import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { AuthBrandPanel } from "@/components/auth/AuthBrandPanel";
+import { AddressLookup } from "@/components/layout/FulfillmentBar";
+import { useFulfillment } from "@/context/FulfillmentContext";
 
-/** Splash: logo pulse, then onboarding on first launch or home. Mirrors `splash_screen.dart`. */
-export default function SplashPage() {
+/** First visit: address or sign-in. No kitchens until we know where they are. */
+export default function WelcomePage() {
   const router = useRouter();
+  const { ready, needsAddress } = useFulfillment();
 
   useEffect(() => {
-    const seen = window.localStorage.getItem("tk_onboarded") === "1";
-    const t = setTimeout(() => router.replace(seen ? "/home" : "/login"), 1600);
-    return () => clearTimeout(t);
-  }, [router]);
+    if (ready && !needsAddress) router.replace("/home");
+  }, [ready, needsAddress, router]);
+
+  if (!ready || !needsAddress) {
+    return (
+      <main className="grid flex-1 place-items-center bg-bg">
+        <p className="text-sm font-semibold text-text-muted">Loading…</p>
+      </main>
+    );
+  }
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center bg-gradient-to-b from-primary to-primary-dark">
-      <div className="splash-scale grid h-36 w-36 place-items-center rounded-[36px] bg-white shadow-lg">
-        <Image
-          src="/images/logo/logo_foreground.png"
-          alt="Takos Korner"
-          width={110}
-          height={110}
-          priority
-        />
+    <div className="flex flex-1 md:grid md:min-h-dvh md:grid-cols-2">
+      <AuthBrandPanel />
+      <div className="flex flex-1 flex-col bg-bg md:justify-center md:overflow-y-auto md:px-12 md:py-10">
+        <div className="flex w-full flex-1 flex-col px-6 py-8 md:mx-auto md:max-w-[420px] md:flex-none md:px-0">
+          <AddressLookup onSaved={() => router.replace("/home")} />
+          <div className="mt-8 border-t border-border pt-6">
+            <p className="text-center text-sm text-text-body">
+              Already have an account? Your saved address comes with it.
+            </p>
+            <div className="mt-4 flex gap-3">
+              <Link
+                href="/login"
+                className="flex h-11 flex-1 items-center justify-center rounded-[12px] bg-primary text-sm font-bold text-white"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/register"
+                className="flex h-11 flex-1 items-center justify-center rounded-[12px] border border-border bg-card text-sm font-bold text-text"
+              >
+                Create account
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
-      <h1 className="mt-6 text-2xl font-extrabold text-white">Takos Korner</h1>
-      <p className="mt-1 text-sm text-white/80">Good food, fast.</p>
-      <div className="mt-10 flex gap-1.5">
-        {[0, 1, 2].map((i) => (
-          <span
-            key={i}
-            className="pulse-dot h-2 w-2 rounded-full bg-white"
-            style={{ animationDelay: `${i * 0.2}s` }}
-          />
-        ))}
-      </div>
-    </main>
+    </div>
   );
 }

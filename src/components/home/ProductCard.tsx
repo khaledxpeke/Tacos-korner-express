@@ -1,10 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { SafeImage as Image } from "@/components/ui/SafeImage";
 import { useRouter } from "next/navigation";
+import { CustomizePanel } from "@/components/product/CustomizePanel";
 import { FavoriteHeart } from "@/components/ui/FavoriteHeart";
 import { Icon } from "@/components/ui/Icon";
-import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useSnackbar } from "@/context/SnackbarContext";
 import { restaurantOf } from "@/data/home";
@@ -12,55 +13,37 @@ import type { ProductModel } from "@/data/models";
 import { cn, money } from "@/lib/utils";
 
 /**
- * Mirrors `product_card.dart`: NEW badge, restaurant pill, heart, quick add / Build.
- * 146px tile in phone carousels; fills its grid cell on desktop or when `grid` is set.
+ * Dish tile. Click or + opens the same add-to-cart popup
+ * (customize options when the dish has them).
  */
 export function ProductCard({
   product,
   grid,
   className,
+  eager,
 }: {
   product: ProductModel;
   grid?: boolean;
   className?: string;
+  eager?: boolean;
 }) {
   const router = useRouter();
-  const { addItem } = useCart();
   const { isProductFavorite, toggleProduct } = useFavorites();
   const snack = useSnackbar();
   const restaurant = restaurantOf(product);
   const isFav = isProductFavorite(product.name);
-
-  const open = () =>
-    router.push(
-      product.isCustomizable
-        ? `/product/${product.id}/customize`
-        : `/product/${product.id}`,
-    );
-
-  function quickAdd() {
-    addItem({
-      id: product.name,
-      productId: product.id,
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      imageUrl: product.image,
-      restaurantName: restaurant.name,
-      quantity: 1,
-      customizations: [],
-    });
-    snack.show(`${product.name} added to cart`, "success");
-  }
+  const [open, setOpen] = useState(false);
 
   return (
+    <>
     <div
-      role="link"
+      role="button"
       tabIndex={0}
-      onClick={open}
-      onKeyDown={(e) => e.key === "Enter" && open()}
+      onClick={() => setOpen(true)}
+      onKeyDown={(e) => e.key === "Enter" && setOpen(true)}
       className={cn(
-        "group flex shrink-0 cursor-pointer flex-col overflow-hidden rounded-card border-[0.5px] border-border bg-card text-start shadow-card transition hover:-translate-y-0.5 hover:shadow-lg md:rounded-2xl",
+        "group flex shrink-0 cursor-pointer flex-col overflow-hidden rounded-card border-[0.5px] border-border bg-card text-start shadow-card transition hover:shadow-lg md:rounded-2xl",
+        !open && "hover:-translate-y-0.5",
         grid ? "w-full" : "w-[146px] md:w-full",
         className,
       )}
@@ -71,6 +54,7 @@ export function ProductCard({
           alt={product.name}
           fill
           sizes="(max-width: 768px) 146px, 300px"
+          loading={eager ? "eager" : undefined}
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
         <button
@@ -123,8 +107,7 @@ export function ProductCard({
             aria-label={product.isCustomizable ? "Customize" : "Add to cart"}
             onClick={(e) => {
               e.stopPropagation();
-              if (product.isCustomizable) open();
-              else quickAdd();
+              setOpen(true);
             }}
             className="grid h-8 w-8 place-items-center rounded-xl bg-primary text-lg font-semibold leading-none text-white transition hover:bg-primary-dark md:h-9 md:w-9 md:text-xl"
           >
@@ -133,5 +116,7 @@ export function ProductCard({
         </div>
       </div>
     </div>
+    {open && <CustomizePanel product={product} onClose={() => setOpen(false)} />}
+    </>
   );
 }

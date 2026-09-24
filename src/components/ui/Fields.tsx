@@ -253,7 +253,10 @@ export function Switch({
       role="switch"
       aria-checked={checked}
       aria-label={label}
-      onClick={() => onChange(!checked)}
+      onClick={(e) => {
+        e.stopPropagation();
+        onChange(!checked);
+      }}
       className={cn(
         "relative h-7 w-12 shrink-0 rounded-full transition-colors",
         checked ? "bg-primary" : "bg-text-muted-light",

@@ -6,7 +6,9 @@ import { useState } from "react";
 import { AuthHeader, SocialButton } from "@/components/auth/AuthWidgets";
 import { Button } from "@/components/ui/Button";
 import { Checkbox, TextField } from "@/components/ui/Fields";
+import { useFulfillment } from "@/context/FulfillmentContext";
 import { useSnackbar } from "@/context/SnackbarContext";
+import { fakeUser } from "@/data/misc";
 
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -14,6 +16,7 @@ const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export default function LoginPage() {
   const router = useRouter();
   const snack = useSnackbar();
+  const { saveAddress, address } = useFulfillment();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
@@ -30,6 +33,9 @@ export default function LoginPage() {
     setLoading(true);
     setTimeout(() => {
       window.localStorage.setItem("tk_onboarded", "1");
+      if (!address.trim()) {
+        saveAddress(`${fakeUser.address}, ${fakeUser.city}`, "delivery");
+      }
       snack.show("Welcome back!", "success");
       router.push("/home");
     }, 700);
@@ -90,7 +96,7 @@ export default function LoginPage() {
             Sign up
           </Link>
         </p>
-        <Link href="/home" className="text-center text-xs font-semibold text-text-muted">
+        <Link href="/" className="text-center text-xs font-semibold text-text-muted">
           Continue as guest
         </Link>
       </form>

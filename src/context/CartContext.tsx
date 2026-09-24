@@ -40,6 +40,7 @@ interface CartCtx extends CartState {
   tipAmount: number;
   total: number;
   addItem: (item: CartItem) => void;
+  addItems: (items: CartItem[]) => void;
   incrementItem: (id: string) => void;
   decrementItem: (id: string) => void;
   removeItem: (id: string) => void;
@@ -64,6 +65,22 @@ function sameLine(a: CartItem, b: CartItem) {
   );
 }
 
+function mergeLines(existing: CartItem[], incoming: CartItem[]) {
+  const items = [...existing];
+  for (const item of incoming) {
+    const idx = items.findIndex((i) => sameLine(i, item));
+    if (idx >= 0) {
+      items[idx] = {
+        ...items[idx],
+        quantity: items[idx].quantity + item.quantity,
+      };
+    } else {
+      items.push(item);
+    }
+  }
+  return items;
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useLocalStorage<CartState>("tk_cart", initialState);
 
@@ -86,18 +103,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     tipAmount,
     total,
     addItem: (item) =>
-      setState((s) => {
-        const idx = s.items.findIndex((i) => sameLine(i, item));
-        if (idx >= 0) {
-          const items = [...s.items];
-          items[idx] = {
-            ...items[idx],
-            quantity: items[idx].quantity + item.quantity,
-          };
-          return { ...s, items };
-        }
-        return { ...s, items: [...s.items, item] };
-      }),
+      setState((s) => ({
+        ...s,
+        items: mergeLines(s.items, [item]),
+      })),
+    addItems: (items) =>
+      setState((s) => ({
+        ...s,
+        items: mergeLines(s.items, items),
+      })),
     incrementItem: (id) =>
       setState((s) => ({
         ...s,

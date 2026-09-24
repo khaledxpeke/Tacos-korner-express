@@ -8,13 +8,11 @@ import { Container } from "./Container";
 import { FulfillmentBar } from "./FulfillmentBar";
 import { Icon } from "@/components/ui/Icon";
 import { useCart } from "@/context/CartContext";
-import { useTheme } from "@/context/ThemeContext";
 import { notifications, fakeUser } from "@/data/misc";
 import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/home", label: "Home" },
-  { href: "/reels", label: "Reels" },
   { href: "/orders", label: "Orders" },
   { href: "/favorites", label: "Favorites" },
 ];
@@ -24,7 +22,6 @@ export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { itemCount } = useCart();
-  const { isDark, toggle } = useTheme();
   const [q, setQ] = useState("");
   const unread = notifications.filter((n) => !n.read).length;
 
@@ -34,7 +31,7 @@ export function SiteHeader() {
         href="/home"
         className="absolute start-5 top-1/2 z-10 flex -translate-y-1/2 items-center gap-2 md:start-8"
       >
-        <Image src="/images/logo/logo_foreground.png" alt="" width={40} height={40} priority />
+        <Image src="/images/logo/logo_foreground.png" alt="" width={40} height={40} loading="eager" />
         <span className="whitespace-nowrap text-lg font-bold text-text">Takos Korner</span>
       </Link>
       <div className="relative mx-auto flex h-[68px] w-full max-w-[1280px] items-center gap-3 px-5 md:px-8">
@@ -92,14 +89,6 @@ export function SiteHeader() {
           >
             <Icon name="magnifier-outline" size={22} />
           </Link>
-          <button
-            type="button"
-            aria-label="Toggle theme"
-            onClick={toggle}
-            className="grid h-10 w-10 place-items-center rounded-full text-text hover:bg-card-gray"
-          >
-            <Icon name={isDark ? "sun-outline" : "moon-outline"} size={22} />
-          </button>
           <Link
             href="/notifications"
             aria-label="Notifications"
@@ -160,7 +149,7 @@ export function SiteFooter() {
             <FooterLink href="/home">Home</FooterLink>
             <FooterLink href="/see-all?kind=restaurants">Restaurants</FooterLink>
             <FooterLink href="/see-all?kind=popular">Popular dishes</FooterLink>
-            <FooterLink href="/reels">Reels</FooterLink>
+            <FooterLink href="/reels">Reels (soon)</FooterLink>
           </div>
           <div>
             <p className="mb-3 font-bold text-text">Account</p>

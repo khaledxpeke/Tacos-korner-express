@@ -4,88 +4,140 @@ import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/layout/Container";
 import { Icon } from "@/components/ui/Icon";
-import { Card, ListTile } from "@/components/ui/Misc";
+import { Card } from "@/components/ui/Misc";
 import { useFavorites } from "@/context/FavoritesContext";
 import { fakeUser } from "@/data/misc";
-import { orders } from "@/data/orders";
+import { orderStatusLabel, orders } from "@/data/orders";
+import { cn } from "@/lib/utils";
 
-/** Mirrors `profile_screen.dart`: avatar, stats, quick links. */
+const accountLinks = [
+  { href: "/orders", icon: "bag-4-outline", title: "Orders", sub: "Track and reorder" },
+  { href: "/favorites", icon: "heart-outline", title: "Favourites", sub: "Dishes and restaurants" },
+  { href: "/saved-combos", icon: "bookmark-outline", title: "Saved combos", sub: "Your custom builds" },
+  { href: "/settings/edit-profile", icon: "map-point-outline", title: "Addresses", sub: "Home and work" },
+  { href: "/notifications", icon: "bell-outline", title: "Notifications" },
+  { href: "/settings", icon: "settings-outline", title: "Settings", sub: "Language, theme, account" },
+  { href: "/help", icon: "question-circle-outline", title: "Help & support" },
+];
+
+/** Account overview — website layout with a side nav on desktop. */
 export default function ProfilePage() {
   const { count } = useFavorites();
+  const recent = orders.slice(0, 2);
 
   return (
-    <>
-      <header className="sticky top-0 z-20 bg-card md:static md:bg-transparent">
-        <Container className="flex h-[60px] items-center justify-between md:h-auto md:pt-8">
-          <h1 className="text-lg font-bold text-text md:text-2xl md:font-extrabold">Profile</h1>
-          <Link
-            href="/settings"
-            aria-label="Settings"
-            className="grid h-10 w-10 place-items-center rounded-full text-text hover:bg-card-gray"
-          >
-            <Icon name="settings-outline" size={22} />
-          </Link>
-        </Container>
-      </header>
+    <main className="flex-1">
+      <Container className="py-5 md:py-8">
+        <h1 className="text-lg font-bold text-text md:text-3xl md:font-extrabold">Account</h1>
 
-      <main className="flex-1">
-        <Container className="py-5 md:py-6">
-          <Card className="overflow-hidden">
-            <div className="h-24 bg-gradient-to-r from-primary to-primary-dark md:h-28" />
-            <div className="-mt-12 flex flex-col items-center px-5 pb-5 md:flex-row md:items-end md:gap-5">
-              <span className="relative h-24 w-24 overflow-hidden rounded-full ring-4 ring-card">
-                <Image src={fakeUser.avatar} alt="" fill sizes="96px" className="object-cover" />
+        <div className="mt-5 grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+          <aside className="hidden lg:block">
+            <Card className="overflow-hidden p-2">
+              {accountLinks.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="flex items-center gap-3 rounded-[12px] px-3 py-2.5 text-sm font-semibold text-text hover:bg-card-gray"
+                >
+                  <Icon name={l.icon} size={18} className="text-primary" />
+                  {l.title}
+                </Link>
+              ))}
+            </Card>
+          </aside>
+
+          <div>
+            <Card className="overflow-hidden">
+              <div className="flex flex-col gap-4 p-5 md:flex-row md:items-center">
+                <span className="relative h-20 w-20 overflow-hidden rounded-full ring-2 ring-border md:h-24 md:w-24">
+                  <Image src={fakeUser.avatar} alt="" fill sizes="96px" className="object-cover" />
+                </span>
+                <div className="flex-1">
+                  <p className="text-lg font-extrabold text-text md:text-2xl">
+                    {fakeUser.firstName} {fakeUser.lastName}
+                  </p>
+                  <p className="text-sm text-text-muted">{fakeUser.email}</p>
+                  <p className="mt-0.5 text-xs text-text-muted">Member since {fakeUser.memberSince}</p>
+                </div>
+                <Link
+                  href="/settings/edit-profile"
+                  className="inline-flex h-10 items-center gap-1.5 self-start rounded-full bg-primary-bg px-4 text-sm font-bold text-primary"
+                >
+                  <Icon name="pen-outline" size={14} />
+                  Edit profile
+                </Link>
+              </div>
+              <div className="grid grid-cols-3 divide-x divide-border border-t border-border">
+                <Stat value={String(orders.length)} label="Orders" href="/orders" />
+                <Stat value={String(count)} label="Favourites" href="/favorites" />
+                <Stat value={`${fakeUser.points}`} label="Points" />
+              </div>
+            </Card>
+
+            <Card className="mt-4 flex items-center gap-4 bg-gradient-to-r from-secondary to-secondary-dark p-4 text-white">
+              <span className="grid h-12 w-12 place-items-center rounded-[14px] bg-white/20">
+                <Icon name="crown-bold" size={26} />
               </span>
-              <div className="mt-3 text-center md:mb-1 md:flex-1 md:text-start">
-                <p className="text-lg font-extrabold text-text md:text-2xl">
-                  {fakeUser.firstName} {fakeUser.lastName}
+              <div className="flex-1">
+                <p className="text-sm font-bold md:text-base">Korner Points</p>
+                <p className="text-xs text-white/80 md:text-sm">
+                  {fakeUser.points} pts · 260 to your next free meal
                 </p>
-                <p className="text-sm text-text-muted">{fakeUser.email}</p>
-                <p className="mt-0.5 text-xs text-text-muted md:text-sm">Member since {fakeUser.memberSince}</p>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/25">
+                  <span className="block h-full w-[82%] rounded-full bg-white" />
+                </div>
               </div>
-              <Link
-                href="/settings/edit-profile"
-                className="mt-4 flex items-center gap-1.5 rounded-full bg-primary-bg px-4 py-2 text-xs font-bold text-primary md:mb-1 md:mt-0 md:px-5 md:py-2.5 md:text-sm"
-              >
-                <Icon name="pen-outline" size={14} />
-                Edit profile
-              </Link>
-            </div>
-            <div className="grid grid-cols-3 divide-x divide-border border-t border-border">
-              <Stat value={String(orders.length)} label="Orders" href="/orders" />
-              <Stat value={String(count)} label="Favourites" href="/favorites" />
-              <Stat value="4.8" label="Rating" />
-            </div>
-          </Card>
+            </Card>
 
-          <Card className="mt-4 flex items-center gap-4 bg-gradient-to-r from-secondary to-secondary-dark p-4 text-white">
-            <span className="grid h-12 w-12 place-items-center rounded-[14px] bg-white/20">
-              <Icon name="crown-bold" size={26} />
-            </span>
-            <div className="flex-1">
-              <p className="text-sm font-bold md:text-base">Korner Points</p>
-              <p className="text-xs text-white/80 md:text-sm">{fakeUser.points} pts · 260 to your next free meal</p>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/25">
-                <span className="block h-full w-[82%] rounded-full bg-white" />
+            <section className="mt-5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-extrabold text-text">Recent orders</h2>
+                <Link href="/orders" className="text-sm font-semibold text-primary">
+                  See all
+                </Link>
               </div>
-            </div>
-          </Card>
+              <div className="mt-3 flex flex-col gap-3">
+                {recent.map((o) => (
+                  <Link
+                    key={o.id}
+                    href="/orders"
+                    className="flex items-center gap-3 rounded-card border-[0.5px] border-border bg-card p-3 shadow-card"
+                  >
+                    <span className="relative h-12 w-12 overflow-hidden rounded-[10px]">
+                      <Image src={o.restaurantImage} alt="" fill sizes="48px" className="object-cover" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-bold text-text">{o.restaurantName}</span>
+                      <span className="block text-xs text-text-muted">{orderStatusLabel[o.status]}</span>
+                    </span>
+                    <Icon name="alt-arrow-right-outline" size={16} className="text-text-muted rtl:rotate-180" />
+                  </Link>
+                ))}
+              </div>
+            </section>
 
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <Card className="divide-y divide-border">
-              <ListTile icon="bag-4-outline" title="My Orders" subtitle="Track and reorder" href="/orders" />
-              <ListTile icon="heart-outline" iconTone="danger" title="Favourites" subtitle="Dishes and restaurants" href="/favorites" />
-              <ListTile icon="bookmark-outline" iconTone="amber" title="Saved Combos" subtitle="Your custom builds" href="/saved-combos" />
-            </Card>
-            <Card className="divide-y divide-border">
-              <ListTile icon="bell-outline" iconTone="blue" title="Notifications" href="/notifications" />
-              <ListTile icon="settings-outline" iconTone="muted" title="Settings" subtitle="Language, theme, account" href="/settings" />
-              <ListTile icon="question-circle-outline" iconTone="green" title="Help & Support" href="/help" />
-            </Card>
+            <div className="mt-5 grid gap-2 lg:hidden">
+              {accountLinks.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-card border-[0.5px] border-border bg-card px-4 py-3 shadow-card",
+                  )}
+                >
+                  <Icon name={l.icon} size={20} className="text-primary" />
+                  <span className="flex-1">
+                    <span className="block text-sm font-bold text-text">{l.title}</span>
+                    {l.sub && <span className="block text-xs text-text-muted">{l.sub}</span>}
+                  </span>
+                  <Icon name="alt-arrow-right-outline" size={16} className="text-text-muted rtl:rotate-180" />
+                </Link>
+              ))}
+            </div>
           </div>
-        </Container>
-      </main>
-    </>
+        </div>
+      </Container>
+    </main>
   );
 }
 

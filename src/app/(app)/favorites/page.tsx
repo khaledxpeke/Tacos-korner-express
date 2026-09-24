@@ -56,8 +56,8 @@ export default function FavoritesPage() {
                   <EmptyCard icon="bottle-bold" title="No favourite dishes" />
                 ) : (
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5 lg:grid-cols-4">
-                    {dishes.map((p) => (
-                      <ProductCard key={p.id} product={p} grid />
+                    {dishes.map((p, i) => (
+                      <ProductCard key={p.id} product={p} grid eager={i === 0} />
                     ))}
                   </div>
                 )
@@ -65,8 +65,8 @@ export default function FavoritesPage() {
                 <EmptyCard icon="shop-bold" title="No favourite restaurants" />
               ) : (
                 <div className="grid gap-3 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
-                  {rests.map((r) => (
-                    <RestaurantCard key={r.id} restaurant={r} />
+                  {rests.map((r, i) => (
+                    <RestaurantCard key={r.id} restaurant={r} eager={i === 0} />
                   ))}
                 </div>
               )}
