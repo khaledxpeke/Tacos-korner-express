@@ -158,6 +158,14 @@ button:disabled,
   cursor: not-allowed;
 }
 
+button:not(:disabled):hover,
+[role="button"]:not([aria-disabled="true"]):hover,
+input[type="button"]:not(:disabled):hover,
+input[type="submit"]:not(:disabled):hover,
+input[type="reset"]:not(:disabled):hover {
+  filter: brightness(0.92);
+}
+
 [dir="rtl"] body {
   font-family: var(--font-arabic);
 }

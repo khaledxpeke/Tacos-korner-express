@@ -26,6 +26,8 @@ export function AddressSuggestField({
   onPick,
   autoFocus,
   placeholder = "Street, neighborhood, city",
+  icon = "magnifier-outline",
+  inputClassName,
 }: {
   id?: string;
   value: string;
@@ -33,6 +35,8 @@ export function AddressSuggestField({
   onPick?: (hit: AddressHit) => void;
   autoFocus?: boolean;
   placeholder?: string;
+  icon?: string;
+  inputClassName?: string;
 }) {
   const [hits, setHits] = useState<AddressHit[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
@@ -67,7 +71,7 @@ export function AddressSuggestField({
     <div>
       <div className="relative">
         <Icon
-          name="magnifier-outline"
+          name={icon}
           size={18}
           className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-text-muted"
         />
@@ -89,13 +93,17 @@ export function AddressSuggestField({
           }}
           placeholder={placeholder}
           autoComplete="off"
-          className="h-12 w-full rounded-full border border-border bg-card py-3 ps-11 pe-20 text-sm text-text outline-none transition placeholder:text-text-muted focus:border-amber focus:ring-2 focus:ring-amber/25"
+          className={
+            inputClassName ??
+            "h-12 w-full rounded-full border border-border bg-card py-3 ps-11 pe-20 text-sm text-text outline-none transition placeholder:text-text-muted focus:border-amber focus:ring-2 focus:ring-amber/25"
+          }
         />
         <div className="absolute end-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
           {status === "loading" && <Spinner />}
         </div>
       </div>
-      <div className="mt-3 flex max-h-36 flex-col gap-2 overflow-y-auto">
+      {(status !== "idle" || hits.length > 0) && (
+      <div className="mt-2 flex max-h-36 flex-col gap-1.5 overflow-y-auto">
         {status === "loading" && hits.length === 0 && (
           <p className="px-1 text-sm text-text-muted">Looking up addresses…</p>
         )}
@@ -121,6 +129,7 @@ export function AddressSuggestField({
           </button>
         ))}
       </div>
+      )}
     </div>
   );
 }

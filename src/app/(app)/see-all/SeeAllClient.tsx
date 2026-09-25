@@ -7,14 +7,15 @@ import { RestaurantCard } from "@/components/home/RestaurantCard";
 import { EmptyCard } from "@/components/ui/Misc";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useFulfillment } from "@/context/FulfillmentContext";
-import { products } from "@/data/home";
+import { products, recommendedProducts } from "@/data/home";
 import { productsForMode, restaurantsForMode } from "@/lib/restaurants";
 
-export type SeeAllKind = "new" | "popular" | "favorites" | "restaurants";
+export type SeeAllKind = "new" | "popular" | "recommended" | "favorites" | "restaurants";
 
 const titles: Record<SeeAllKind, string> = {
   new: "New Arrivals",
   popular: "Popular Near You",
+  recommended: "Recommended dishes",
   favorites: "Favorites",
   restaurants: "All Restaurants",
 };
@@ -31,7 +32,9 @@ export function SeeAllClient({ kind }: { kind: SeeAllKind }) {
       ? availableProducts.filter((p) => p.isNew)
       : kind === "popular"
         ? availableProducts.filter((p) => p.isFeatured)
-        : kind === "favorites"
+        : kind === "recommended"
+          ? productsForMode(mode, recommendedProducts)
+          : kind === "favorites"
           ? availableProducts.filter((p) => favoriteProductNames.includes(p.name))
           : [];
 

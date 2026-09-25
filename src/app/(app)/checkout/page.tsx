@@ -214,8 +214,8 @@ export default function CheckoutPage() {
                         >
                           <Icon name={m.icon} size={22} />
                         </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block whitespace-nowrap text-xs font-bold text-text">{m.name}</span>
+                        <span className="flex-1">
+                          <span className="block whitespace-nowrap text-[13px] font-bold leading-tight text-text">{m.name}</span>
                           <span className="mt-0.5 block text-[11px] leading-snug text-text-muted">{m.sub}</span>
                         </span>
                         <span

@@ -14,7 +14,7 @@ import { EmptyCard, SelectableChip } from "@/components/ui/Misc";
 import { useCart } from "@/context/CartContext";
 import { useFulfillment } from "@/context/FulfillmentContext";
 import { useSnackbar } from "@/context/SnackbarContext";
-import { products } from "@/data/home";
+import { recommendedProducts } from "@/data/home";
 import { productsForMode } from "@/lib/restaurants";
 import { money } from "@/lib/utils";
 
@@ -24,9 +24,7 @@ export default function CartPage() {
   const cart = useCart();
   const snack = useSnackbar();
   const { mode } = useFulfillment();
-  const suggestions = productsForMode(mode, products)
-    .filter((p) => p.isFeatured)
-    .slice(0, 4);
+  const suggestions = productsForMode(mode, recommendedProducts).slice(0, 4);
   const [confirmClear, setConfirmClear] = useState(false);
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState(false);
@@ -78,14 +76,14 @@ export default function CartPage() {
                 <EmptyCard
                   icon="cart-large-2-outline"
                   title="Your cart is empty"
-                  message="Pick a restaurant or add one of the dishes people order most."
+                  message="Pick a restaurant or add one of the recommended dishes."
                   action={
                     <div className="flex flex-col gap-2 sm:flex-row">
                       <Button title="Browse restaurants" onClick={() => router.push("/home")} />
                       <Button
-                        title="Popular dishes"
+                        title="Recommended dishes"
                         isTransparent
-                        onClick={() => router.push("/see-all?kind=popular")}
+                        onClick={() => router.push("/see-all?kind=recommended")}
                       />
                     </div>
                   }
@@ -95,12 +93,12 @@ export default function CartPage() {
                 <section className="mt-8">
                   <div className="flex items-end justify-between gap-3">
                     <div>
-                      <h2 className="text-base font-extrabold text-text md:text-xl">Popular right now</h2>
+                      <h2 className="text-base font-extrabold text-text md:text-xl">Recommended dishes</h2>
                       <p className="mt-0.5 text-sm text-text-muted">Add something and come back to checkout.</p>
                     </div>
                     <button
                       type="button"
-                      onClick={() => router.push("/see-all?kind=popular")}
+                      onClick={() => router.push("/see-all?kind=recommended")}
                       className="shrink-0 text-sm font-semibold text-primary"
                     >
                       See all
@@ -115,65 +113,60 @@ export default function CartPage() {
               )}
             </div>
           ) : (
-            <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
+            <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:items-start">
               <div className="flex flex-col gap-3">
                 {cart.items.map((i) => (
                   <CartLine key={i.id} item={i} />
                 ))}
+              </div>
 
-                <section className="rounded-card border-[0.5px] border-border bg-card p-3 shadow-card md:rounded-2xl md:p-5">
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
-                    <span className="hidden h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-bg text-primary md:grid">
-                      <Icon name="ticket-sale-outline" size={24} />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <h2 className="text-sm font-bold text-text md:text-base md:font-extrabold">Promo code</h2>
-                      <p className="mt-0.5 hidden text-sm text-text-muted md:block">
-                        {cart.promoCode
-                          ? `${cart.promoCode} is applied to this order.`
-                          : "Enter a code, or pick one of the offers."}
-                      </p>
-                    </div>
-                    {cart.promoCode ? (
-                      <div className="flex items-center justify-between gap-4 rounded-xl bg-green-bg px-4 py-3 lg:min-w-[280px]">
-                        <span className="text-sm font-bold text-green">
-                          −{money(cart.discount)} saved
-                        </span>
-                        <button
-                          type="button"
-                          onClick={cart.removePromoCode}
-                          className="text-sm font-semibold text-danger"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ) : (
-                      <form
-                        className="flex w-full lg:w-[360px]"
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          applyCode();
-                        }}
+              <aside className="flex flex-col gap-3 lg:sticky lg:top-24">
+                <section className="rounded-card border-[0.5px] border-border bg-card p-4 shadow-card">
+                  <h2 className="text-sm font-bold text-text">Promo code</h2>
+                  <p className="mt-0.5 text-xs text-text-muted">
+                    {cart.promoCode
+                      ? `${cart.promoCode} is applied to this order.`
+                      : "Enter a code, or pick one of the offers."}
+                  </p>
+                  {cart.promoCode ? (
+                    <div className="mt-3 flex items-center justify-between gap-4 rounded-xl bg-green-bg px-4 py-3">
+                      <span className="text-sm font-bold text-green">
+                        −{money(cart.discount)} saved
+                      </span>
+                      <button
+                        type="button"
+                        onClick={cart.removePromoCode}
+                        className="text-sm font-semibold text-danger"
                       >
-                        <input
-                          value={code}
-                          onChange={(e) => {
-                            setCode(e.target.value.toUpperCase());
-                            setCodeError(false);
-                          }}
-                          placeholder="TACO10"
-                          aria-label="Promo code"
-                          className="h-10 min-w-0 flex-1 rounded-s-xl border border-e-0 border-border bg-bg px-3 text-sm font-semibold tracking-wide text-text uppercase outline-none placeholder:font-normal placeholder:normal-case placeholder:text-text-muted focus:border-primary md:h-12 md:px-4"
-                        />
-                        <button
-                          type="submit"
-                          className="h-10 shrink-0 rounded-e-xl bg-primary px-4 text-sm font-bold text-white md:h-12 md:px-5"
-                        >
-                          Apply
-                        </button>
-                      </form>
-                    )}
-                  </div>
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <form
+                      className="mt-3 flex w-full"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        applyCode();
+                      }}
+                    >
+                      <input
+                        value={code}
+                        onChange={(e) => {
+                          setCode(e.target.value.toUpperCase());
+                          setCodeError(false);
+                        }}
+                        placeholder="TACO10"
+                        aria-label="Promo code"
+                        className="h-10 min-w-0 flex-1 rounded-s-xl border border-e-0 border-border bg-bg px-3 text-sm font-semibold tracking-wide text-text uppercase outline-none placeholder:font-normal placeholder:normal-case placeholder:text-text-muted focus:border-primary"
+                      />
+                      <button
+                        type="submit"
+                        className="h-10 shrink-0 rounded-e-xl bg-primary px-4 text-sm font-bold text-white"
+                      >
+                        Apply
+                      </button>
+                    </form>
+                  )}
                   {codeError && (
                     <p className="mt-3 text-sm font-medium text-danger">
                       That code is not valid. Try TACO10 or WELCOME.
@@ -192,7 +185,7 @@ export default function CartPage() {
                             setCode(offer.code);
                             setCodeError(false);
                           }}
-                          className="rounded-full border border-border bg-bg px-2.5 py-1 text-xs text-text hover:border-primary md:px-3 md:py-1.5 md:text-sm"
+                          className="rounded-full border border-border bg-bg px-2.5 py-1 text-xs text-text hover:border-primary"
                         >
                           <span className="font-bold">{offer.code}</span>
                           <span className="text-text-muted"> · {offer.label}</span>
@@ -202,10 +195,9 @@ export default function CartPage() {
                   )}
                 </section>
 
-                <div className="grid gap-3 lg:grid-cols-2">
                 <div className="rounded-card border-[0.5px] border-border bg-card p-4 shadow-card">
-                  <p className="text-sm font-bold text-text md:text-base">Tip for your courier</p>
-                  <p className="text-xs text-text-muted md:text-sm">Goes entirely to your delivery person</p>
+                  <p className="text-sm font-bold text-text">Tip for your courier</p>
+                  <p className="text-xs text-text-muted">Goes entirely to your delivery person</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {[0, 5, 10, 15].map((p) => (
                       <SelectableChip
@@ -219,7 +211,7 @@ export default function CartPage() {
                 </div>
 
                 <div className="rounded-card border-[0.5px] border-border bg-card p-4 shadow-card">
-                  <p className="flex items-center gap-2 text-sm font-bold text-text md:text-base">
+                  <p className="flex items-center gap-2 text-sm font-bold text-text">
                     <Icon name="notes-outline" size={17} className="text-text-muted" />
                     Special instructions
                   </p>
@@ -230,12 +222,8 @@ export default function CartPage() {
                     onChange={(e) => cart.setNote(e.target.value)}
                   />
                 </div>
-                </div>
-              </div>
 
-              {/* Summary */}
-              <aside className="hidden lg:block">
-                <div className="sticky top-24 overflow-hidden rounded-card border-[0.5px] border-border shadow-card">
+                <div className="hidden overflow-hidden rounded-card border-[0.5px] border-border shadow-card lg:block">
                   <ReceiptSummaryCard
                     ctaTitle="Proceed to Checkout"
                     ctaIcon="alt-arrow-right-outline"

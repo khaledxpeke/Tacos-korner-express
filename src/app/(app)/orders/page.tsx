@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BackAppBar } from "@/components/layout/BackAppBar";
 import { Page } from "@/components/layout/Page";
-import { OrdersViewToggle } from "@/components/orders/OrdersViewToggle";
+import { OrderDetailsModal } from "@/components/orders/OrderDetailsModal";
+import { OrderFilterTabs } from "@/components/orders/OrdersViewToggle";
 import { Icon } from "@/components/ui/Icon";
 import { Badge, EmptyCard } from "@/components/ui/Misc";
 import { SafeImage } from "@/components/ui/SafeImage";
@@ -30,6 +31,7 @@ const steps: OrderStatus[] = ["pending", "preparing", "onTheWay", "delivered"];
 /** Mirrors `orders_screen.dart`: Active / Past toggle and order cards. */
 export default function OrdersPage() {
   const [view, setView] = useState<View>("active");
+  const [openOrder, setOpenOrder] = useState<OrderModel | null>(null);
   const active = orders.filter((o) => activeStatuses.includes(o.status));
   const past = orders.filter((o) => !activeStatuses.includes(o.status));
   const list = view === "active" ? active : past;
@@ -38,8 +40,7 @@ export default function OrdersPage() {
     <>
       <BackAppBar title="My Orders" fallbackHref="/profile" />
       <Page>
-        <OrdersViewToggle<View>
-          className="md:max-w-md md:text-sm"
+        <OrderFilterTabs<View>
           value={view}
           onChange={setView}
           options={[
@@ -55,18 +56,19 @@ export default function OrdersPage() {
             message={view === "active" ? "Hungry? Your next order will show up here." : "Past orders appear here."}
           />
         ) : (
-          <div className="mt-5 flex flex-col gap-4">
+          <div className={cn("mt-5 gap-4", view === "past" ? "grid md:grid-cols-2" : "flex flex-col")}>
             {list.map((o) => (
-              <OrderCard key={o.id} order={o} />
+              <OrderCard key={o.id} order={o} onDetails={() => setOpenOrder(o)} />
             ))}
           </div>
         )}
       </Page>
+      {openOrder && <OrderDetailsModal order={openOrder} onClose={() => setOpenOrder(null)} />}
     </>
   );
 }
 
-function OrderCard({ order }: { order: OrderModel }) {
+function OrderCard({ order, onDetails }: { order: OrderModel; onDetails: () => void }) {
   const router = useRouter();
   const cart = useCart();
   const snack = useSnackbar();
@@ -87,7 +89,7 @@ function OrderCard({ order }: { order: OrderModel }) {
 
   return (
     <article className="rounded-2xl border-[0.5px] border-border bg-card p-4 shadow-card md:p-6">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+      <div className={cn("flex flex-col gap-5", isActive && "lg:flex-row lg:items-start")}>
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-4">
             <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl md:h-16 md:w-16">
@@ -95,8 +97,8 @@ function OrderCard({ order }: { order: OrderModel }) {
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-base font-extrabold text-text md:text-xl">{order.restaurantName}</h2>
-                <Badge tone={statusTone[order.status]} className="md:px-3 md:py-1 md:text-xs">
+                <h2 className="text-base font-extrabold text-text">{order.restaurantName}</h2>
+                <Badge tone={statusTone[order.status]}>
                   {order.status === "onTheWay" && <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-current" />}
                   {orderStatusLabel[order.status]}
                 </Badge>
@@ -105,6 +107,12 @@ function OrderCard({ order }: { order: OrderModel }) {
                 {order.id} · {order.date}
               </p>
             </div>
+            {!isActive && (
+              <div className="shrink-0 text-end">
+                <p className="text-xs text-text-muted">Total</p>
+                <p className="text-lg font-extrabold text-text">{money(order.total)}</p>
+              </div>
+            )}
           </div>
 
           {isActive && (
@@ -127,57 +135,74 @@ function OrderCard({ order }: { order: OrderModel }) {
             </div>
           )}
 
-          <ul className="mt-5 flex flex-col gap-3">
-            {order.items.map((it) => (
-              <li key={it.name} className="flex items-center gap-3 text-sm md:text-base">
-                <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl md:h-12 md:w-12">
-                  <SafeImage src={it.imageUrl} alt="" fill sizes="48px" className="object-cover" />
-                </span>
-                <span className="flex-1 text-text">{it.name}</span>
-                <span className="font-semibold text-text-muted">×{it.quantity}</span>
-              </li>
-            ))}
-          </ul>
+          {isActive && (
+            <ul className="mt-5 flex flex-col gap-3">
+              {order.items.map((it) => (
+                <li key={it.name} className="flex items-center gap-3 text-sm">
+                  <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl">
+                    <SafeImage src={it.imageUrl} alt="" fill sizes="40px" className="object-cover" />
+                  </span>
+                  <span className="flex-1 text-text">{it.name}</span>
+                  <span className="font-semibold text-text-muted">×{it.quantity}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {!isActive && (
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={onDetails}
+                className="flex items-center justify-center gap-1.5 rounded-xl bg-card-gray px-2 py-2 text-xs font-bold text-text transition hover:bg-[#e0e0d8]"
+              >
+                <Icon name="eye-outline" size={15} />
+                Details
+              </button>
+              <button
+                type="button"
+                onClick={reorder}
+                className="flex items-center justify-center gap-1.5 rounded-xl bg-primary px-2 py-2 text-xs font-bold text-white transition hover:bg-primary-dark"
+              >
+                <Icon name="restart-outline" size={15} />
+                Reorder
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push("/help")}
+                className="flex items-center justify-center gap-1.5 rounded-xl bg-card-gray px-2 py-2 text-xs font-bold text-text transition hover:bg-[#e0e0d8]"
+              >
+                <Icon name="question-circle-outline" size={15} />
+                Help
+              </button>
+            </div>
+          )}
         </div>
 
+        {isActive && (
         <div className="flex flex-col gap-3 border-t border-border pt-4 lg:w-56 lg:border-s lg:border-t-0 lg:ps-6 lg:pt-0">
           <div>
             <p className="text-sm text-text-muted">Total</p>
             <p className="text-2xl font-extrabold text-text">{money(order.total)}</p>
           </div>
-          {isActive ? (
-            <button
-              type="button"
-              onClick={() =>
-                snack.show(
-                  `${orderStatusLabel[order.status]} · ${order.restaurantName} is on it`,
-                  "info",
-                )
-              }
-              className="flex items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-white"
-            >
-              <Icon name="routing-outline" size={18} />
-              Track order
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={reorder}
-              className="flex items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-white"
-            >
-              <Icon name="restart-outline" size={18} />
-              Reorder
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={onDetails}
+            className="flex items-center justify-center gap-2 rounded-xl bg-card-gray py-3 text-sm font-bold text-text transition hover:bg-[#e0e0d8]"
+          >
+            <Icon name="eye-outline" size={18} />
+            View details
+          </button>
           <button
             type="button"
             onClick={() => router.push("/help")}
-            className="flex items-center justify-center gap-2 rounded-xl bg-card-gray py-3 text-sm font-bold text-text"
+            className="flex items-center justify-center gap-2 rounded-xl bg-card-gray py-3 text-sm font-bold text-text transition hover:bg-[#e0e0d8]"
           >
             <Icon name="question-circle-outline" size={18} />
             Help
           </button>
         </div>
+        )}
       </div>
     </article>
   );

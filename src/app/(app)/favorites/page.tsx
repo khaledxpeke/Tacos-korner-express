@@ -6,7 +6,7 @@ import { BackAppBar } from "@/components/layout/BackAppBar";
 import { Page } from "@/components/layout/Page";
 import { ProductCard } from "@/components/home/ProductCard";
 import { RestaurantCard } from "@/components/home/RestaurantCard";
-import { SegmentedToggle } from "@/components/orders/OrdersViewToggle";
+import { OrderFilterTabs } from "@/components/orders/OrdersViewToggle";
 import { Button } from "@/components/ui/Button";
 import { EmptyCard } from "@/components/ui/Misc";
 import { useFavorites } from "@/context/FavoritesContext";
@@ -41,8 +41,7 @@ export default function FavoritesPage() {
           </div>
         ) : (
           <>
-            <SegmentedToggle<View>
-              className="md:max-w-sm"
+            <OrderFilterTabs<View>
               value={view}
               onChange={setView}
               options={[

@@ -1229,3 +1229,7 @@ export function productsOfRestaurant(restaurantId: number) {
 
 export const newProducts = products.filter((p) => p.isNew);
 export const popularProducts = products.filter((p) => p.isFeatured);
+/** Highest-rated dishes, used for the home row and the empty cart. */
+export const recommendedProducts = [...products].sort(
+  (a, b) => b.rating - a.rating || b.reviews - a.reviews,
+);

@@ -19,7 +19,7 @@ import { SearchField } from "@/components/ui/Fields";
 import { Icon } from "@/components/ui/Icon";
 import { EmptyCard } from "@/components/ui/Misc";
 import { useFulfillment } from "@/context/FulfillmentContext";
-import { categories, products, promos, restaurants } from "@/data/home";
+import { categories, products, promos, recommendedProducts, restaurants } from "@/data/home";
 import type { ProductModel } from "@/data/models";
 import { productsForMode, restaurantMatchesCategory, restaurantsForMode } from "@/lib/restaurants";
 
@@ -40,6 +40,10 @@ export default function HomePage() {
   const newArrivals = allNew.slice(0, 4);
   const newIds = new Set(newArrivals.map((p) => p.id));
   const popular = allPopular.filter((p) => !newIds.has(p.id)).slice(0, 4);
+  const shownIds = new Set([...newIds, ...popular.map((p) => p.id)]);
+  const recommended = byCategory(productsForMode(mode, recommendedProducts))
+    .filter((p) => !shownIds.has(p.id))
+    .slice(0, 4);
   const matchedRestaurants = availableRestaurants.filter((r) =>
     restaurantMatchesCategory(r, category, availableProducts),
   );
@@ -171,6 +175,13 @@ export default function HomePage() {
           iconClass="text-amber"
           items={popular}
           onSeeAll={() => router.push("/see-all?kind=popular")}
+        />
+        <ProductSection
+          title="Recommended dishes"
+          icon="cup-star-bold"
+          iconClass="text-purple"
+          items={recommended}
+          onSeeAll={() => router.push("/see-all?kind=recommended")}
         />
       </Page>
     </>

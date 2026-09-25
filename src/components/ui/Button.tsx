@@ -34,7 +34,7 @@ export function Button({
       type="button"
       disabled={disabled}
       className={cn(
-        "flex w-full items-center justify-center gap-2 rounded-[12px] font-bold transition active:scale-[0.98]",
+        "flex w-full items-center justify-center gap-2 rounded-[12px] font-bold transition hover:brightness-95 active:scale-[0.98] disabled:hover:brightness-100",
         size === "md" ? "px-6 py-3 text-sm" : "px-4 py-2 text-xs",
         isTransparent
           ? "border-[1.5px] border-primary bg-transparent text-primary"
@@ -94,8 +94,8 @@ export function SecondaryButton({
       className={cn(
         "flex items-center justify-center gap-2 rounded-[12px] border px-4 py-2.5 text-sm font-semibold transition active:scale-[0.98]",
         gold
-          ? "border-secondary bg-secondary/10 text-secondary"
-          : "border-border bg-card text-text",
+          ? "border-secondary bg-secondary/10 text-secondary hover:bg-secondary/20"
+          : "border-border bg-card text-text hover:bg-card-gray",
         className,
       )}
       {...rest}
@@ -123,7 +123,7 @@ export function IconButton({
     <button
       type="button"
       className={cn(
-        "grid place-items-center rounded-full bg-card/90 shadow-card backdrop-blur",
+        "grid place-items-center rounded-full bg-card/90 shadow-card backdrop-blur transition hover:bg-card",
         className,
       )}
       style={{ width: size, height: size }}

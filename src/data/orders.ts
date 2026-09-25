@@ -22,12 +22,18 @@ export const orders: OrderModel[] = [
         quantity: 2,
         imageUrl:
           "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&q=80",
+        selections: [
+          { label: "Size", value: "Double" },
+          { label: "Sauce", value: "Secret Sauce" },
+          { label: "Toppings", value: "Cheddar, pickles, bacon" },
+        ],
       },
       {
         name: "Mango Lassi",
         quantity: 1,
         imageUrl:
           "https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=300&q=80",
+        selections: [{ label: "Ingredients", value: "Mango, yogurt, cardamom" }],
       },
     ],
     total: 32.48,
@@ -45,6 +51,11 @@ export const orders: OrderModel[] = [
         quantity: 1,
         imageUrl:
           "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=300&q=80",
+        selections: [
+          { label: "Crust", value: "Thin crust" },
+          { label: "Sauce", value: "Tomato" },
+          { label: "Ingredients", value: "Mozzarella, basil, olive oil" },
+        ],
       },
     ],
     total: 14.0,
@@ -62,12 +73,14 @@ export const orders: OrderModel[] = [
         quantity: 1,
         imageUrl:
           "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=300&q=80",
+        selections: [{ label: "Ingredients", value: "Tuna, spicy mayo, cucumber, avocado, sesame" }],
       },
       {
         name: "Dragon Roll (8pc)",
         quantity: 1,
         imageUrl:
           "https://images.unsplash.com/photo-1562802378-063ec186a863?w=300&q=80",
+        selections: [{ label: "Ingredients", value: "Shrimp tempura, avocado, eel sauce" }],
       },
     ],
     total: 37.5,
@@ -85,6 +98,11 @@ export const orders: OrderModel[] = [
         quantity: 1,
         imageUrl:
           "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=300&q=80",
+        selections: [
+          { label: "Protein", value: "Carne asada" },
+          { label: "Salsa", value: "Salsa verde" },
+          { label: "Extras", value: "Cilantro, onion, guacamole" },
+        ],
       },
     ],
     total: 11.99,
@@ -102,6 +120,7 @@ export const orders: OrderModel[] = [
         quantity: 2,
         imageUrl:
           "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=300&q=80",
+        selections: [{ label: "Ingredients", value: "Chocolate cake, Nutella, vanilla ice cream" }],
       },
     ],
     total: 17.0,

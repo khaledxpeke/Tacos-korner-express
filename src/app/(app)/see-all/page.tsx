@@ -2,7 +2,7 @@ import { SeeAllClient, type SeeAllKind } from "./SeeAllClient";
 
 export const metadata = { title: "See all · Takos Korner" };
 
-const kinds: SeeAllKind[] = ["new", "popular", "favorites", "restaurants"];
+const kinds: SeeAllKind[] = ["new", "popular", "recommended", "favorites", "restaurants"];
 
 export default async function SeeAllPage({
   searchParams,

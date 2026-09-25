@@ -2,10 +2,12 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useRef, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
+import { AddressSuggestField } from "@/components/layout/FulfillmentBar";
 import { Dropdown, TextField } from "@/components/ui/Fields";
 import { Icon } from "@/components/ui/Icon";
 import { SelectableChip } from "@/components/ui/Misc";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { allergenOptions } from "@/data/home";
 import { cn } from "@/lib/utils";
 
@@ -227,13 +229,16 @@ export function AddressFormFields({
           />
         ))}
       </div>
-      <TextField
-        label="Street address"
-        icon="map-point-outline"
-        placeholder="12 Rue du Lac"
-        value={value.street}
-        onChange={(e) => set("street")(e.target.value)}
-      />
+      <div>
+        <span className="mb-1.5 block text-xs font-semibold text-text-body">Street address</span>
+        <AddressSuggestField
+          value={value.street}
+          onChange={(street) => onChange({ ...value, street })}
+          placeholder="Start typing a street or neighborhood"
+          icon="map-point-outline"
+          inputClassName="h-12 w-full rounded-[12px] border border-border bg-card py-3 ps-11 pe-10 text-sm text-text outline-none transition placeholder:text-text-muted focus:border-amber focus:ring-2 focus:ring-amber/25"
+        />
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <Dropdown
           label="City"
@@ -261,7 +266,21 @@ export function AddressFormFields({
   );
 }
 
-/** Mirrors `allergy_selector.dart`. */
+const allergenImages: Record<string, string> = {
+  Gluten: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200&q=80",
+  Dairy: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=200&q=80",
+  Nuts: "https://images.unsplash.com/photo-1599599810769-bcde5a160d32?w=200&q=80",
+  Egg: "https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=200&q=80",
+  Fish: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=200&q=80",
+  Shellfish: "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=200&q=80",
+  Soy: "https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=200&q=80",
+  Sesame: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=200&q=80",
+  Peanuts: "https://images.unsplash.com/photo-1560155016-bd4879ae8f21?w=200&q=80",
+};
+
+const extraAllergens = ["Peanuts", "Mustard", "Celery"];
+
+/** Mirrors `allergy_selector.dart`, with a photo on each allergen. */
 export function AllergySelector({
   value,
   onChange,
@@ -269,20 +288,129 @@ export function AllergySelector({
   value: string[];
   onChange: (v: string[]) => void;
 }) {
+  const [adding, setAdding] = useState(false);
+  const [query, setQuery] = useState("");
+  const known = [...allergenOptions, ...extraAllergens];
+  const custom = value.filter((name) => !known.includes(name));
+  const q = query.trim().toLowerCase();
+  const suggestions = known.filter(
+    (name) => !value.includes(name) && (q.length === 0 || name.toLowerCase().includes(q)),
+  );
+
+  function toggle(name: string) {
+    onChange(value.includes(name) ? value.filter((x) => x !== name) : [...value, name]);
+  }
+
+  function addCustom(name: string) {
+    const next = name.trim();
+    if (!next) return;
+    if (!value.some((item) => item.toLowerCase() === next.toLowerCase())) onChange([...value, next]);
+    setQuery("");
+    setAdding(false);
+  }
+
   return (
-    <div className="flex flex-wrap gap-2">
-      {allergenOptions.map((a) => {
-        const on = value.includes(a);
-        return (
-          <SelectableChip
-            key={a}
-            label={a}
-            selected={on}
-            icon={on ? "check-circle-bold" : undefined}
-            onClick={() => onChange(on ? value.filter((x) => x !== a) : [...value, a])}
+    <div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {allergenOptions.map((name) => {
+          const on = value.includes(name);
+          return (
+            <button
+              key={name}
+              type="button"
+              aria-pressed={on}
+              onClick={() => toggle(name)}
+              className={cn(
+                "flex items-center gap-2.5 rounded-2xl border p-2 text-start transition",
+                on ? "border-primary bg-primary-bg" : "border-border bg-card hover:border-text-muted",
+              )}
+            >
+              <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl">
+                <SafeImage src={allergenImages[name]} alt="" fill sizes="44px" className="object-cover" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-bold text-text">{name}</span>
+                <span className={cn("text-[11px] font-semibold", on ? "text-primary" : "text-text-muted")}>
+                  {on ? "Selected" : "Tap to add"}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {(custom.length > 0 || adding) && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {custom.map((name) => (
+            <button
+              key={name}
+              type="button"
+              onClick={() => toggle(name)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary-bg px-3 py-1.5 text-xs font-bold text-primary"
+            >
+              {name}
+              <Icon name="close-outline" size={12} />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {adding ? (
+        <div className="mt-3">
+          <input
+            value={query}
+            autoFocus
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addCustom(suggestions[0] ?? query);
+              }
+            }}
+            placeholder="Type an allergy"
+            className="h-11 w-full rounded-[12px] border border-border bg-card px-4 text-sm text-text outline-none placeholder:text-text-muted focus:border-amber focus:ring-2 focus:ring-amber/25"
           />
-        );
-      })}
+          <div className="mt-2 flex flex-wrap gap-2">
+            {suggestions.slice(0, 6).map((name) => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => addCustom(name)}
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-card py-1 pe-3 ps-1 text-xs font-semibold text-text hover:border-primary"
+              >
+                {allergenImages[name] ? (
+                  <span className="relative h-6 w-6 overflow-hidden rounded-full">
+                    <SafeImage src={allergenImages[name]} alt="" fill sizes="24px" className="object-cover" />
+                  </span>
+                ) : (
+                  <span className="grid h-6 w-6 place-items-center rounded-full bg-card-gray text-[10px] font-bold">
+                    {name.slice(0, 1)}
+                  </span>
+                )}
+                {name}
+              </button>
+            ))}
+            {q.length > 1 && !known.some((name) => name.toLowerCase() === q) && (
+              <button
+                type="button"
+                onClick={() => addCustom(query)}
+                className="rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-white hover:bg-primary-dark"
+              >
+                Add “{query.trim()}”
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1.5 text-xs font-bold text-text-body hover:border-primary hover:text-primary"
+        >
+          <Icon name="add-circle-outline" size={15} />
+          Add another
+        </button>
+      )}
     </div>
   );
 }

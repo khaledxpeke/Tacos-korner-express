@@ -79,6 +79,8 @@ export interface OrderLineItem {
   name: string;
   quantity: number;
   imageUrl: string;
+  /** Chosen size, sauce, toppings, or the ingredients in the dish. */
+  selections?: { label: string; value: string }[];
 }
 
 export interface OrderModel {

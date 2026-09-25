@@ -8,15 +8,17 @@ import { SiteFooter, SiteHeader } from "@/components/layout/SiteHeader";
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <RequireLocation>
-      <SiteHeader />
-      <div className="hidden h-[68px] md:block" aria-hidden />
-      <div className="sticky top-0 z-30 border-b border-border bg-card md:hidden">
-        <Container className="py-2">
-          <FulfillmentBar />
-        </Container>
+      <div className="flex min-h-dvh flex-1 flex-col">
+        <SiteHeader />
+        <div className="hidden h-[68px] shrink-0 md:block" aria-hidden />
+        <div className="sticky top-0 z-30 shrink-0 border-b border-border bg-card md:hidden">
+          <Container className="py-2">
+            <FulfillmentBar />
+          </Container>
+        </div>
+        <div className="flex flex-1 flex-col">{children}</div>
+        <SiteFooter />
       </div>
-      <div className="flex flex-1 flex-col">{children}</div>
-      <SiteFooter />
       <AddressPrompt />
     </RequireLocation>
   );
