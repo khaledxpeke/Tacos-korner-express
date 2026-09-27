@@ -50,7 +50,7 @@ export function SeeAllClient({ kind }: { kind: SeeAllKind }) {
         {kind === "restaurants" ? (
           availableRestaurants.length === 0 ? (
             <EmptyCard
-              icon="shop-bold"
+              icon="shop-2-outline"
               title="No restaurants for delivery"
               message="Switch to pickup to see kitchens that don't deliver."
             />
@@ -63,7 +63,7 @@ export function SeeAllClient({ kind }: { kind: SeeAllKind }) {
           )
         ) : items.length === 0 ? (
           <EmptyCard
-            icon={kind === "favorites" ? "heart-outline" : "bottle-bold"}
+            icon={kind === "favorites" ? "heart-outline" : "chef-hat-outline"}
             title={kind === "favorites" ? "No favorites yet" : "No dishes found"}
             message={
               kind === "favorites"

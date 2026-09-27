@@ -30,7 +30,7 @@ export function AuthBrandPanel() {
   const slide = onboardingSlides[i];
 
   return (
-    <aside className="relative hidden overflow-hidden bg-gradient-to-br from-primary via-primary-dark to-[#7a0a10] text-white md:flex md:flex-col md:justify-between md:p-10 lg:p-14">
+    <aside className="relative hidden overflow-hidden bg-linear-to-br from-primary via-primary-dark to-[#7a0a10] text-white md:flex md:flex-col md:justify-between md:p-10 lg:p-14">
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <span className="blob-drift absolute -left-16 top-24 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
         <span className="blob-drift absolute -right-10 bottom-16 h-72 w-72 rounded-full bg-black/10 blur-3xl [animation-delay:-6s]" />
@@ -68,7 +68,7 @@ export function AuthBrandPanel() {
               )}
             />
           ))}
-          <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-center gap-2 bg-gradient-to-t from-black/55 to-transparent px-4 pb-4 pt-12">
+          <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-center gap-2 bg-linear-to-t from-black/55 to-transparent px-4 pb-4 pt-12">
             {onboardingSlides.map((s, k) => (
               <button
                 key={s.title}

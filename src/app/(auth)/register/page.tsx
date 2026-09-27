@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { AuthHeader, PasswordStrengthBar, SocialButton, passwordStrength } from "@/components/auth/AuthWidgets";
+import { AuthHeader, PasswordStrengthBar, SocialButton, isPasswordAcceptable } from "@/components/auth/AuthWidgets";
+import { LegalSheet } from "@/components/legal/LegalSheet";
 import { Button } from "@/components/ui/Button";
 import { Checkbox, PhoneField, TextField } from "@/components/ui/Fields";
 import { useSnackbar } from "@/context/SnackbarContext";
+import { privacyDoc, termsDoc, type LegalDoc } from "@/data/legal";
 
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -16,6 +18,7 @@ export default function RegisterPage() {
   const snack = useSnackbar();
   const [f, setF] = useState({ first: "", last: "", email: "", phone: "", password: "", confirm: "" });
   const [terms, setTerms] = useState(false);
+  const [legal, setLegal] = useState<LegalDoc | null>(null);
   const [errors, setErrors] = useState<Partial<Record<keyof typeof f | "terms", string>>>({});
 
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -28,7 +31,7 @@ export default function RegisterPage() {
     if (f.last.trim().length < 2) err.last = "Required";
     if (!emailRe.test(f.email)) err.email = "Enter a valid email";
     if (f.phone.replace(/\D/g, "").length < 8) err.phone = "Enter a valid number";
-    if (passwordStrength(f.password) < 2) err.password = "Use 8+ chars with a number or capital";
+    if (!isPasswordAcceptable(f.password)) err.password = "Meet the password requirements below";
     if (f.confirm !== f.password) err.confirm = "Passwords do not match";
     if (!terms) err.terms = "Please accept the terms";
     setErrors(err);
@@ -46,8 +49,6 @@ export default function RegisterPage() {
         title="Create account"
         subtitle="A few details and you're ready to order."
         gradient="from-secondary to-secondary-dark"
-        showBack
-        onBack={() => router.push("/login")}
       />
       <form onSubmit={submit} className="flex flex-1 flex-col gap-4 px-7 py-7 md:px-0">
         <div className="grid grid-cols-2 gap-3">
@@ -90,8 +91,8 @@ export default function RegisterPage() {
         />
         <Checkbox checked={terms} onChange={setTerms}>
           I agree to the{" "}
-          <Link href="/terms" className="font-semibold text-primary">Terms</Link> and{" "}
-          <Link href="/privacy" className="font-semibold text-primary">Privacy Policy</Link>
+          <LegalLink onClick={() => setLegal(termsDoc)}>Terms</LegalLink> and{" "}
+          <LegalLink onClick={() => setLegal(privacyDoc)}>Privacy Policy</LegalLink>
         </Checkbox>
         <Button title="Continue" type="submit" icon="alt-arrow-right-outline" iconRight className="mt-2" />
 
@@ -110,6 +111,24 @@ export default function RegisterPage() {
           <Link href="/login" className="font-bold text-primary">Sign in</Link>
         </p>
       </form>
+      <LegalSheet doc={legal} onClose={() => setLegal(null)} />
     </div>
+  );
+}
+
+/** Inside the checkbox label: open the sheet without toggling the box. */
+function LegalLink({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick();
+      }}
+      className="font-semibold text-primary hover:underline"
+    >
+      {children}
+    </button>
   );
 }

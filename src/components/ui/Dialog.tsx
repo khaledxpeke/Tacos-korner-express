@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { Button } from "./Button";
 import { Icon } from "./Icon";
 import { cn } from "@/lib/utils";
+import { useBodyScrollLock, useEscapeKey } from "@/lib/useBodyScrollLock";
 
 interface Props {
   open: boolean;
@@ -31,6 +32,8 @@ export function Dialog({
   danger,
   variant = "confirm",
 }: Props) {
+  useBodyScrollLock(open);
+  useEscapeKey(open, onClose);
   if (!open) return null;
   return (
     <div
@@ -106,6 +109,8 @@ export function BottomSheet({
   children: ReactNode;
   className?: string;
 }) {
+  useBodyScrollLock(open);
+  useEscapeKey(open, onClose);
   if (!open) return null;
   return (
     <div

@@ -14,7 +14,6 @@ import { Icon } from "@/components/ui/Icon";
 import { SelectableChip } from "@/components/ui/Misc";
 import { useFulfillment } from "@/context/FulfillmentContext";
 import { useSnackbar } from "@/context/SnackbarContext";
-import { cn } from "@/lib/utils";
 
 function subscribeNothing() {
   return () => {};
@@ -63,11 +62,21 @@ export default function RegistrationDetailsPage() {
       setStep(step + 1);
       return;
     }
+    finish();
+  }
+
+  function finish() {
     window.localStorage.setItem("tk_onboarded", "1");
     const line = [address.street, address.city, address.postalCode].filter(Boolean).join(", ");
     if (line) saveAddress(line, "delivery");
     snack.show("Account created — welcome!", "success");
     router.push("/home");
+  }
+
+  // Skipping never validates; the last step's skip finishes the flow like Finish does.
+  function skip() {
+    if (step < steps.length - 1) setStep(step + 1);
+    else finish();
   }
 
   return (
@@ -124,7 +133,7 @@ export default function RegistrationDetailsPage() {
                   type="date"
                   value={birthday}
                   onChange={(e) => setBirthday(e.target.value)}
-                  className="w-full rounded-[12px] border border-border bg-card px-4 py-3 text-sm text-text outline-none focus:border-primary"
+                  className="w-full rounded-[12px] border border-border bg-card px-4 py-3 text-sm text-text outline-none focus:border-amber focus:ring-2 focus:ring-amber/25"
                 />
                 <span className="mt-1 block text-xs text-text-muted">We send a treat on your birthday 🎂</span>
               </label>
@@ -137,8 +146,9 @@ export default function RegistrationDetailsPage() {
             <button
               type="button"
               onClick={() => setStep(step - 1)}
-              className={cn("rounded-[12px] border border-border px-5 text-sm font-semibold text-text")}
+              className="inline-flex items-center gap-1.5 rounded-[12px] border border-text-muted-light bg-card px-5 text-sm font-bold text-text shadow-card transition hover:border-primary hover:text-primary"
             >
+              <Icon name="alt-arrow-left-outline" size={16} className="rtl:rotate-180" />
               Back
             </button>
           )}
@@ -150,11 +160,14 @@ export default function RegistrationDetailsPage() {
             onClick={next}
           />
         </div>
-        {step > 0 && (
-          <button type="button" onClick={next} className="mt-3 text-center text-xs font-semibold text-text-muted">
-            Skip this step
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={skip}
+          className="mx-auto mt-4 inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-bold text-text-body transition hover:bg-card hover:text-primary"
+        >
+          Skip this step
+          <Icon name="alt-arrow-right-outline" size={15} className="rtl:rotate-180" />
+        </button>
       </div>
     </div>
   );

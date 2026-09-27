@@ -12,7 +12,7 @@ import { Icon } from "./Icon";
 import { cn } from "@/lib/utils";
 
 const fieldBase =
-  "w-full rounded-[12px] border bg-card px-4 py-3 text-sm text-text placeholder:text-text-muted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15";
+  "w-full rounded-[12px] border bg-card px-4 py-3 text-sm text-text placeholder:text-text-muted outline-none transition focus:border-amber focus:ring-2 focus:ring-amber/25";
 
 interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -230,11 +230,13 @@ export function Switch({
   checked,
   onChange,
   label,
+  disabled,
   className,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
   label?: string;
+  disabled?: boolean;
   className?: string;
 }) {
   return (
@@ -243,12 +245,13 @@ export function Switch({
       role="switch"
       aria-checked={checked}
       aria-label={label}
+      disabled={disabled}
       onClick={(e) => {
         e.stopPropagation();
         onChange(!checked);
       }}
       className={cn(
-        "relative h-7 w-12 shrink-0 rounded-full transition-colors",
+        "relative h-7 w-12 shrink-0 rounded-full transition-colors disabled:opacity-50",
         checked ? "bg-primary" : "bg-text-muted-light",
         className,
       )}
@@ -276,7 +279,7 @@ export function Checkbox({
   className?: string;
 }) {
   return (
-    <label className={cn("flex cursor-pointer items-start gap-3", className)}>
+    <label className={cn("flex cursor-pointer items-center gap-3", className)}>
       <input
         type="checkbox"
         className="peer sr-only"
@@ -285,8 +288,8 @@ export function Checkbox({
       />
       <span
         className={cn(
-          "mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border-2 transition",
-          checked ? "border-primary bg-primary text-white" : "border-text-muted",
+          "grid h-5 w-5 shrink-0 place-items-center rounded-md border-2 transition",
+          checked ? "border-primary bg-primary text-white" : "border-text-muted bg-card",
         )}
       >
         {checked && <Icon name="check-read-outline" size={14} />}

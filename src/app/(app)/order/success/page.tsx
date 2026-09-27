@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Container } from "@/components/layout/Container";
+import { Confetti } from "@/components/ui/Confetti";
 import { Icon } from "@/components/ui/Icon";
 
 export const metadata = { title: "Order confirmed · Takos Korner" };
@@ -15,6 +16,7 @@ export default async function OrderSuccessPage({
 
   return (
     <main className="flex flex-1 items-center">
+      <Confetti />
       <Container size="sm" className="py-12 text-center">
         <div className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-green-bg text-green">
           <Icon name="check-circle-bold" size={56} />
@@ -39,18 +41,12 @@ export default async function OrderSuccessPage({
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/orders"
-            className="flex flex-1 items-center justify-center gap-2 rounded-[12px] bg-gradient-to-r from-primary to-primary-dark px-6 py-3 text-sm font-bold text-white shadow-card"
-          >
-            <Icon name="routing-outline" size={18} />
-            Track My Order
-          </Link>
+        <div className="mt-8 flex justify-center">
           <Link
             href="/home"
-            className="flex flex-1 items-center justify-center gap-2 rounded-[12px] border-[1.5px] border-primary px-6 py-3 text-sm font-bold text-primary"
+            className="flex w-full items-center justify-center gap-2 rounded-[12px] bg-linear-to-r from-primary to-primary-dark px-10 py-3 text-sm font-bold text-white shadow-card transition hover:brightness-95 sm:w-auto"
           >
+            <Icon name="home-2-outline" size={18} />
             Back to Home
           </Link>
         </div>

@@ -42,7 +42,7 @@ export function PromoCard({
         sizes="(max-width: 640px) 85vw, 400px"
         className="object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/55 to-black/10 rtl:bg-gradient-to-l" />
+      <div className="absolute inset-0 bg-linear-to-r from-black/90 via-black/55 to-black/10 rtl:bg-linear-to-l" />
       <div
         className={cn(
           "absolute inset-y-0 start-5 flex flex-col justify-center",
@@ -138,7 +138,7 @@ export function PromoMiniCard({ promo, wide }: { promo: PromoModel; wide?: boole
         sizes="(max-width: 768px) 146px, 300px"
         className="object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/5 to-black/55" />
+      <div className="absolute inset-0 bg-linear-to-b from-black/5 to-black/55" />
       <div className="absolute inset-x-2.5 bottom-2 md:inset-x-4 md:bottom-3">
         <p className="truncate text-xs font-extrabold leading-tight text-white md:text-sm">
           {promo.title}

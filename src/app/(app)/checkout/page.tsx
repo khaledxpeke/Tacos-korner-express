@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BackAppBar } from "@/components/layout/BackAppBar";
 import { Container } from "@/components/layout/Container";
+import { CheckoutButton } from "@/components/cart/CheckoutButton";
 import { ReceiptSummaryCard } from "@/components/orders/ReceiptSummaryCard";
 import { AddAddressPanel } from "@/components/address/AddAddressPanel";
 import { Button } from "@/components/ui/Button";
@@ -12,29 +14,20 @@ import { EmptyCard } from "@/components/ui/Misc";
 import { useCart } from "@/context/CartContext";
 import { useFulfillment } from "@/context/FulfillmentContext";
 import { useSnackbar } from "@/context/SnackbarContext";
-import { fakeUser } from "@/data/misc";
-import { useLocalStorage } from "@/lib/useLocalStorage";
+import {
+  MAX_ADDRESSES,
+  addressTypeIcon,
+  addressTypes,
+  formatAddress,
+  repeatableType,
+  useAddressBook,
+} from "@/context/AddressBookContext";
 import { cn } from "@/lib/utils";
 
 interface Address {
   label: string;
   line: string;
-}
-
-const presetAddresses: Address[] = [
-  { label: "Home", line: `${fakeUser.address}, ${fakeUser.city}` },
-  { label: "Work", line: "Immeuble Carthage Center, Avenue Habib Bourguiba, Tunis" },
-];
-
-function iconFor(label: string) {
-  if (label === "Work") return "case-outline";
-  if (label === "Home") return "home-2-outline";
-  return "map-point-outline";
-}
-
-function nextOtherLabel(existing: Address[]) {
-  const count = existing.filter((a) => a.label === "Other" || a.label.startsWith("Other ")).length;
-  return count === 0 ? "Other" : `Other ${count + 1}`;
+  icon: string;
 }
 
 type Method = "cash" | "card" | "wallet";
@@ -53,24 +46,22 @@ export default function CheckoutPage() {
   const fulfillment = useFulfillment();
   const mode = fulfillment.mode;
   const currentLine = fulfillment.address.trim();
-  const [extras, setExtras, extrasReady] = useLocalStorage<Address[]>("tk_saved_addresses", []);
+  const book = useAddressBook();
   const [adding, setAdding] = useState(false);
   const [method, setMethod] = useState<Method>("cash");
+  // Keeps the page (not the empty-cart state) on screen while navigating to the success page.
+  const [placed, setPlaced] = useState(false);
 
-  const savedAddresses: Address[] = [
-    ...presetAddresses,
-    ...extras.filter((extra) => !presetAddresses.some((a) => a.line === extra.line)),
-  ];
-
-  useEffect(() => {
-    if (!extrasReady || !currentLine) return;
-    if (presetAddresses.some((a) => a.line === currentLine)) return;
-    setExtras((prev) =>
-      prev.some((a) => a.line === currentLine)
-        ? prev
-        : [...prev, { label: nextOtherLabel(prev), line: currentLine }],
-    );
-  }, [currentLine, extrasReady, setExtras]);
+  const bookAddresses: Address[] = book.addresses.map((a) => ({
+    label: a.type,
+    line: formatAddress(a),
+    icon: addressTypeIcon(a.type),
+  }));
+  // An address typed in the header that is not in the address book still shows, unsaved.
+  const savedAddresses: Address[] =
+    currentLine && !bookAddresses.some((a) => a.line === currentLine)
+      ? [{ label: "Current address", line: currentLine, icon: "gps-outline" }, ...bookAddresses]
+      : bookAddresses;
 
   function selectAddress(a: Address) {
     fulfillment.saveAddress(a.line, "delivery");
@@ -82,32 +73,46 @@ export default function CheckoutPage() {
       snack.show("Enter a street or neighborhood", "error");
       return;
     }
-    const preset = presetAddresses.find((a) => a.line.toLowerCase() === line.toLowerCase());
-    if (preset) {
-      selectAddress(preset);
-    } else {
-      const existing = extras.find((a) => a.line.toLowerCase() === line.toLowerCase());
-      const next = existing ?? { label: nextOtherLabel(extras), line };
-      if (!existing) setExtras((prev) => [...prev, next]);
-      selectAddress(next);
+    const existing = bookAddresses.find((a) => a.line.toLowerCase() === line.toLowerCase());
+    if (!existing) {
+      const taken = book.takenTypes();
+      const type = addressTypes.find((t) => !taken.includes(t.label))?.label ?? repeatableType;
+      book.add({ type, street: line, city: "", postalCode: "", notes: "" });
     }
+    fulfillment.saveAddress(line, "delivery");
     setAdding(false);
   }
 
-  function placeOrder() {
+  function canPlaceOrder() {
     if (mode === "delivery" && !currentLine) {
       snack.show("Please choose a delivery address", "error");
-      return;
+      return false;
     }
+    return true;
+  }
+
+  function placeOrder() {
+    setPlaced(true);
     const orderNumber = `TK-${2000 + cart.items.length * 37 + cart.itemCount}`;
     cart.clearCart();
     router.replace(`/order/success?n=${orderNumber}`);
   }
 
-  if (cart.items.length === 0) {
+  const placeOrderButton = (
+    <CheckoutButton
+      title="Place Order"
+      icon="check-circle-bold"
+      doneLabel="Order placed!"
+      doneIcon="check-circle-bold"
+      canGo={canPlaceOrder}
+      onGo={placeOrder}
+    />
+  );
+
+  if (cart.items.length === 0 && !placed) {
     return (
       <>
-        <BackAppBar title="Checkout" fallbackHref="/cart" />
+        <BackAppBar title="Checkout" subtitle="Confirm delivery, payment and your order" fallbackHref="/cart" />
         <Container className="py-8">
           <div className="mx-auto max-w-md">
             <EmptyCard
@@ -124,7 +129,7 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <BackAppBar title="Checkout" fallbackHref="/cart" />
+      <BackAppBar title="Checkout" subtitle="Confirm delivery, payment and your order" fallbackHref="/cart" />
       <main className="flex-1">
         <Container className="py-5 md:py-6">
           <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
@@ -164,7 +169,7 @@ export default function CheckoutPage() {
                             on ? "border-primary bg-primary-bg" : "border-border",
                           )}
                         >
-                          <Icon name={iconFor(a.label)} size={20} className="text-primary" />
+                          <Icon name={a.icon} size={20} className="text-primary" />
                           <span className="flex-1">
                             <span className="block text-sm font-bold text-text">{a.label}</span>
                             <span className="block text-xs text-text-muted">{a.line}</span>
@@ -175,13 +180,20 @@ export default function CheckoutPage() {
                     })}
                     {adding ? (
                       <AddAddressPanel onSave={addAddress} onCancel={() => setAdding(false)} />
+                    ) : book.isFull ? (
+                      <p className="flex items-center justify-between gap-3 rounded-card bg-bg px-3 py-2.5 text-xs text-text-muted">
+                        <span>You have saved {MAX_ADDRESSES} of {MAX_ADDRESSES} addresses.</span>
+                        <Link href="/settings/addresses" className="font-bold text-primary hover:underline">
+                          Manage
+                        </Link>
+                      </p>
                     ) : (
                       <button
                         type="button"
                         onClick={() => setAdding(true)}
-                        className="flex items-center justify-center gap-2 rounded-card border border-dashed border-text-muted py-3 text-sm font-semibold text-text-body hover:bg-card-gray"
+                        className="flex items-center justify-center gap-2 rounded-card border border-dashed border-border py-3 text-sm font-semibold text-text-body transition hover:border-primary/40 hover:text-primary"
                       >
-                        <Icon name="add-circle-bold" size={18} />
+                        <Icon name="add-circle-outline" size={18} />
                         Add new address
                       </button>
                     )}
@@ -238,14 +250,14 @@ export default function CheckoutPage() {
 
               <div className="lg:hidden">
                 <div className="overflow-hidden rounded-card border-[0.5px] border-border shadow-card">
-                  <ReceiptSummaryCard onCta={placeOrder} />
+                  <ReceiptSummaryCard cta={placeOrderButton} />
                 </div>
               </div>
             </div>
 
             <aside className="hidden lg:block">
               <div className="sticky top-24 overflow-hidden rounded-card border-[0.5px] border-border shadow-card">
-                <ReceiptSummaryCard onCta={placeOrder} />
+                <ReceiptSummaryCard cta={placeOrderButton} />
               </div>
             </aside>
           </div>

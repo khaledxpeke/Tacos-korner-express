@@ -29,7 +29,7 @@ export default function WelcomePage() {
       <AuthBrandPanel />
       <div className="flex flex-1 flex-col bg-bg md:justify-center md:overflow-y-auto md:px-12 md:py-10">
         <div className="flex w-full flex-1 flex-col px-6 py-8 md:mx-auto md:max-w-[420px] md:flex-none md:px-0">
-          <AddressLookup onSaved={() => router.replace("/home")} />
+          <AddressLookup framed onSaved={() => router.replace("/home")} />
           <div className="mt-8 border-t border-border pt-6">
             <p className="text-center text-sm text-text-body">
               Already have an account? Your saved address comes with it.

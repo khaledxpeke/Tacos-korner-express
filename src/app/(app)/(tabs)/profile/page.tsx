@@ -5,53 +5,35 @@ import Link from "next/link";
 import { Container } from "@/components/layout/Container";
 import { Icon } from "@/components/ui/Icon";
 import { Card } from "@/components/ui/Misc";
+import { UserAvatar } from "@/components/ui/UserAvatar";
+import { AccountNav, useAccountLinks } from "@/components/profile/AccountNav";
 import { useFavorites } from "@/context/FavoritesContext";
 import { fakeUser } from "@/data/misc";
 import { orderStatusLabel, orders } from "@/data/orders";
 import { cn } from "@/lib/utils";
 
-const accountLinks = [
-  { href: "/orders", icon: "bag-4-outline", title: "Orders", sub: "Track and reorder" },
-  { href: "/favorites", icon: "heart-outline", title: "Favourites", sub: "Dishes and restaurants" },
-  { href: "/saved-combos", icon: "bookmark-outline", title: "Saved combos", sub: "Your custom builds" },
-  { href: "/settings/edit-profile", icon: "map-point-outline", title: "Addresses", sub: "Home and work" },
-  { href: "/notifications", icon: "bell-outline", title: "Notifications" },
-  { href: "/settings", icon: "settings-outline", title: "Settings", sub: "Language, theme, account" },
-  { href: "/help", icon: "question-circle-outline", title: "Help & support" },
-];
-
 /** Account overview — website layout with a side nav on desktop. */
 export default function ProfilePage() {
   const { count } = useFavorites();
+  // Phones list every section except the overview they are already on.
+  const accountLinks = useAccountLinks().filter((l) => l.href !== "/profile");
   const recent = orders.slice(0, 2);
 
   return (
     <main className="flex-1">
       <Container className="py-5 md:py-8">
         <h1 className="text-lg font-bold text-text md:text-3xl md:font-extrabold">Account</h1>
+        <p className="text-xs text-text-muted md:text-sm">Your profile, rewards and recent orders in one place</p>
 
         <div className="mt-5 grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
-          <aside className="hidden lg:block">
-            <Card className="overflow-hidden p-2">
-              {accountLinks.map((l) => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className="flex items-center gap-3 rounded-[12px] px-3 py-2.5 text-sm font-semibold text-text hover:bg-card-gray"
-                >
-                  <Icon name={l.icon} size={18} className="text-primary" />
-                  {l.title}
-                </Link>
-              ))}
-            </Card>
+          <aside className="hidden lg:sticky lg:top-[92px] lg:block lg:self-start">
+            <AccountNav />
           </aside>
 
           <div>
             <Card className="overflow-hidden">
               <div className="flex flex-col gap-4 p-5 md:flex-row md:items-center">
-                <span className="relative h-20 w-20 overflow-hidden rounded-full ring-2 ring-border md:h-24 md:w-24">
-                  <Image src={fakeUser.avatar} alt="" fill sizes="96px" className="object-cover" />
-                </span>
+                <UserAvatar className="h-20 w-20 ring-2 ring-border md:h-24 md:w-24" initialsClass="text-2xl" />
                 <div className="flex-1">
                   <p className="text-lg font-extrabold text-text md:text-2xl">
                     {fakeUser.firstName} {fakeUser.lastName}
@@ -74,20 +56,7 @@ export default function ProfilePage() {
               </div>
             </Card>
 
-            <Card className="mt-4 flex items-center gap-4 bg-gradient-to-r from-secondary to-secondary-dark p-4 text-white">
-              <span className="grid h-12 w-12 place-items-center rounded-[14px] bg-white/20">
-                <Icon name="crown-bold" size={26} />
-              </span>
-              <div className="flex-1">
-                <p className="text-sm font-bold md:text-base">Korner Points</p>
-                <p className="text-xs text-white/80 md:text-sm">
-                  {fakeUser.points} pts · 260 to your next free meal
-                </p>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/25">
-                  <span className="block h-full w-[82%] rounded-full bg-white" />
-                </div>
-              </div>
-            </Card>
+            <PointsCard points={fakeUser.points} />
 
             <section className="mt-5">
               <div className="flex items-center justify-between">
@@ -141,6 +110,50 @@ export default function ProfilePage() {
   );
 }
 
+/** Loyalty card: dark navy with gold accents so it reads as a reward, not another red button. */
+function PointsCard({ points }: { points: number }) {
+  const goal = 1500;
+  const pct = Math.min(100, Math.round((points / goal) * 100));
+  return (
+    <div className="relative mt-4 overflow-hidden rounded-2xl bg-linear-to-br from-[#1a1a2e] via-[#23233d] to-[#2e2a4a] p-4 text-white shadow-card md:p-5 dark:from-[#1e2a44] dark:via-[#26304d] dark:to-[#332d52]">
+      <span aria-hidden className="pointer-events-none absolute -end-10 -top-12 h-40 w-40 rounded-full bg-amber/25 blur-3xl" />
+      <span aria-hidden className="pointer-events-none absolute -bottom-16 start-1/3 h-32 w-32 rounded-full bg-primary/20 blur-3xl" />
+      <div className="relative flex items-center gap-4">
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[14px] bg-linear-to-br from-[#ffd36e] to-amber text-[#5a3b00] shadow-lg shadow-amber/20">
+          <Icon name="crown-bold" size={24} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-bold md:text-base">Korner Points</p>
+            <span className="rounded-full border border-amber/40 bg-amber/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-[#ffd36e] uppercase">
+              Gold member
+            </span>
+          </div>
+          <p className="mt-0.5 text-2xl font-extrabold tracking-tight md:text-3xl">
+            {points.toLocaleString()} <span className="text-sm font-semibold text-white/60">pts</span>
+          </p>
+        </div>
+      </div>
+      <div className="relative mt-4">
+        <div className="h-2 overflow-hidden rounded-full bg-white/15">
+          <span
+            className="block h-full rounded-full bg-linear-to-r from-amber to-[#ffd36e]"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <div className="mt-2 flex items-center justify-between text-xs text-white/70">
+          <span>
+            <span className="font-bold text-white">{Math.max(0, goal - points)} pts</span> to your next free meal
+          </span>
+          <Link href="/help" className="font-semibold text-[#ffd36e] hover:underline">
+            How it works
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Stat({ value, label, href }: { value: string; label: string; href?: string }) {
   const body = (
     <>
@@ -149,10 +162,19 @@ function Stat({ value, label, href }: { value: string; label: string; href?: str
     </>
   );
   return href ? (
-    <Link href={href} className="flex flex-col items-center py-3 hover:bg-card-gray md:py-5">
+    <Link href={href} className="group flex flex-col items-center py-3 transition hover:bg-bg md:py-5">
       {body}
+      <span className="mt-0.5 flex items-center gap-0.5 text-[10px] font-semibold text-primary md:text-xs">
+        View
+        <Icon name="alt-arrow-right-outline" size={11} className="transition group-hover:translate-x-0.5 rtl:rotate-180" />
+      </span>
     </Link>
   ) : (
-    <div className="flex flex-col items-center py-3 md:py-5">{body}</div>
+    <div className="flex flex-col items-center py-3 md:py-5">
+      {body}
+      <span className="mt-0.5 text-[10px] font-semibold text-transparent md:text-xs" aria-hidden>
+        ·
+      </span>
+    </div>
   );
 }

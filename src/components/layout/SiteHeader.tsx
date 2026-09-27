@@ -7,8 +7,9 @@ import { useState } from "react";
 import { Container } from "./Container";
 import { FulfillmentBar } from "./FulfillmentBar";
 import { Icon } from "@/components/ui/Icon";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useCart } from "@/context/CartContext";
-import { notifications, fakeUser } from "@/data/misc";
+import { notifications } from "@/data/misc";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -129,7 +130,7 @@ export function SiteHeader() {
             aria-label="Profile"
             className="relative ms-1 h-10 w-10 overflow-hidden rounded-full ring-2 ring-border"
           >
-            <Image src={fakeUser.avatar} alt="" fill sizes="40px" className="object-cover" />
+            <UserAvatar className="h-full w-full" sizes="40px" initialsClass="text-xs" />
           </Link>
         </div>
       </div>

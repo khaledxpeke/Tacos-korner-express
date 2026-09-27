@@ -17,7 +17,7 @@ export function SafeImage({ className, alt, priority, loading, ...rest }: ImageP
       <span
         aria-label={typeof alt === "string" ? alt : undefined}
         className={cn(
-          "absolute inset-0 grid place-items-center bg-gradient-to-br from-card-gray to-border text-2xl",
+          "absolute inset-0 grid place-items-center bg-linear-to-br from-card-gray to-border text-2xl",
           className,
         )}
       >

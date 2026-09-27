@@ -17,33 +17,37 @@ export function Shimmer({
   return <div className={cn("shimmer rounded-[12px]", className)} style={style} />;
 }
 
-/** Mirrors `empty_card.dart`. */
+/** Empty / no-results state. Plain by default so it sits quietly on the page; `variant="card"` boxes it. */
 export function EmptyCard({
-  icon = "box-outline",
+  icon = "magnifer-outline",
   title,
   message,
   action,
+  variant = "plain",
   className,
 }: {
   icon?: string;
   title: string;
   message?: string;
   action?: ReactNode;
+  variant?: "plain" | "card";
   className?: string;
 }) {
   return (
     <div
       className={cn(
-        "flex flex-col items-center rounded-card border border-border bg-card px-6 py-10 text-center shadow-card",
+        "flex flex-col items-center px-6 py-8 text-center",
+        variant === "card" && "rounded-card border border-border bg-card shadow-card",
         className,
       )}
     >
-      <div className="mb-4 grid h-16 w-16 place-items-center rounded-full bg-primary-bg text-primary">
-        <Icon name={icon} size={32} />
+      <div className="relative mb-3 grid h-12 w-12 place-items-center rounded-full border border-border bg-card text-text-muted shadow-sm">
+        <span className="absolute -inset-1.5 rounded-full border border-dashed border-border" aria-hidden />
+        <Icon name={icon} size={22} />
       </div>
-      <h3 className="text-base font-bold text-text">{title}</h3>
-      {message && <p className="mt-1 text-sm text-text-muted">{message}</p>}
-      {action && <div className="mt-5 w-full">{action}</div>}
+      <h3 className="text-sm font-bold text-text md:text-[15px]">{title}</h3>
+      {message && <p className="mt-1 max-w-xs text-xs text-text-muted md:text-sm">{message}</p>}
+      {action && <div className="mt-4 w-full max-w-xs">{action}</div>}
     </div>
   );
 }

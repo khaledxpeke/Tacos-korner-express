@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { useMemo, useState, type CSSProperties, type Dispatch, type SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { BackAppBar } from "@/components/layout/BackAppBar";
 import { Page } from "@/components/layout/Page";
@@ -187,12 +187,12 @@ export function SearchClient({
                 {dishResults.length === 0 ? (
                   <EmptyCard
                     className="mt-2"
-                    icon="bottle-bold"
+                    icon="chef-hat-outline"
                     title="No dishes found"
                     message="Try another word or clear the filters"
                   />
                 ) : (
-                  <div className="mt-2 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5 lg:grid-cols-4">
+                  <div className="mt-2 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
                     {dishResults.map((p, i) => (
                       <ProductCard key={p.id} product={p} grid eager={i === 0} />
                     ))}
@@ -213,7 +213,7 @@ export function SearchClient({
                 {restaurantResults.length === 0 ? (
                   <EmptyCard
                     className="mt-2"
-                    icon="shop-bold"
+                    icon="shop-2-outline"
                     title="No restaurants found"
                     message="Try another word or clear the filters"
                   />
@@ -268,21 +268,12 @@ function FilterFields({
           ))}
         </div>
       </div>
-      <div>
-        <div className="mb-2 flex justify-between text-xs font-bold text-text-body">
-          <span>Max price</span>
-          <span className="text-primary">{money(filters.maxPrice)}</span>
-        </div>
-        <input
-          type="range"
-          min={5}
-          max={Math.ceil(maxProductPrice)}
-          step={0.5}
-          value={filters.maxPrice}
-          onChange={(e) => setFilters((f) => ({ ...f, maxPrice: Number(e.target.value) }))}
-          className="w-full accent-primary"
-        />
-      </div>
+      <PriceSlider
+        value={filters.maxPrice}
+        min={5}
+        max={Math.ceil(maxProductPrice)}
+        onChange={(v) => setFilters((f) => ({ ...f, maxPrice: v }))}
+      />
       <div className="flex items-center justify-between">
         <span className="text-sm text-text">Open now</span>
         <Switch checked={filters.openNow} onChange={(v) => setFilters((f) => ({ ...f, openNow: v }))} />
@@ -313,6 +304,45 @@ function FilterFields({
             />
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function PriceSlider({
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  onChange: (v: number) => void;
+}) {
+  const pct = ((value - min) / (max - min)) * 100;
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-xs font-bold text-text-body">Max price</span>
+        <span className="rounded-full bg-primary-bg px-2.5 py-1 text-xs font-extrabold text-primary">
+          {value >= max ? "Any price" : `Up to ${money(value)}`}
+        </span>
+      </div>
+      <input
+        type="range"
+        aria-label="Max price"
+        min={min}
+        max={max}
+        step={0.5}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="range-slider"
+        style={{ "--pct": `${pct}%` } as CSSProperties}
+      />
+      <div className="mt-2 flex justify-between text-[11px] font-semibold text-text-muted">
+        <span>{money(min)}</span>
+        <span>{money(max)}</span>
       </div>
     </div>
   );

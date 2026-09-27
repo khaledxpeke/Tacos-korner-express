@@ -18,9 +18,10 @@ import {
 import { SearchField } from "@/components/ui/Fields";
 import { Icon } from "@/components/ui/Icon";
 import { EmptyCard } from "@/components/ui/Misc";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { useFulfillment } from "@/context/FulfillmentContext";
 import { categories, products, promos, recommendedProducts, restaurants } from "@/data/home";
-import type { ProductModel } from "@/data/models";
+import type { ProductModel, RestaurantModel } from "@/data/models";
 import { productsForMode, restaurantMatchesCategory, restaurantsForMode } from "@/lib/restaurants";
 
 export default function HomePage() {
@@ -47,7 +48,10 @@ export default function HomePage() {
   const matchedRestaurants = availableRestaurants.filter((r) =>
     restaurantMatchesCategory(r, category, availableProducts),
   );
-  const visibleRestaurants = matchedRestaurants.slice(0, 6);
+  // More than six: show five and use the last slot as a "browse all" tile.
+  const hasMoreRestaurants = matchedRestaurants.length > 6;
+  const visibleRestaurants = matchedRestaurants.slice(0, hasMoreRestaurants ? 5 : 6);
+  const seeAllRestaurants = () => router.push("/see-all?kind=restaurants");
 
   if (mode === "pickup") {
     return (
@@ -132,7 +136,7 @@ export default function HomePage() {
             <>
               {visibleRestaurants.length === 0 ? (
                 <EmptyCard
-                  icon="shop-bold"
+                  icon="shop-2-outline"
                   title="No restaurants found"
                   message="Try adjusting your filters or search again"
                 />
@@ -141,17 +145,14 @@ export default function HomePage() {
                   {visibleRestaurants.map((r, i) => (
                     <RestaurantCard key={r.id} restaurant={r} eager={i === 0} />
                   ))}
+                  {hasMoreRestaurants && (
+                    <BrowseAllTile
+                      restaurants={matchedRestaurants.slice(5)}
+                      total={matchedRestaurants.length}
+                      onClick={seeAllRestaurants}
+                    />
+                  )}
                 </div>
-              )}
-              {matchedRestaurants.length > visibleRestaurants.length && (
-                <button
-                  type="button"
-                  onClick={() => router.push("/see-all?kind=restaurants")}
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] border border-dashed border-text-muted bg-transparent py-3 text-sm font-bold text-text hover:bg-card md:mx-auto md:mt-6 md:w-auto md:px-8"
-                >
-                  See all restaurants
-                  <Icon name="alt-arrow-right-outline" size={18} className="rtl:rotate-180" />
-                </button>
               )}
             </>
           ) : (
@@ -188,6 +189,51 @@ export default function HomePage() {
   );
 }
 
+/** Last grid slot: a teaser of the kitchens that did not fit, linking to the full list. */
+function BrowseAllTile({
+  restaurants: more,
+  total,
+  onClick,
+}: {
+  restaurants: RestaurantModel[];
+  total: number;
+  onClick: () => void;
+}) {
+  const faces = more.slice(0, 3);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex items-center gap-4 rounded-card border border-border bg-card p-4 text-start shadow-card transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg md:flex-col md:justify-center md:gap-5 md:rounded-2xl md:p-8 md:text-center"
+    >
+      <span className="flex -space-x-3 rtl:space-x-reverse">
+        {faces.map((r) => (
+          <span
+            key={r.id}
+            className="relative h-11 w-11 overflow-hidden rounded-full border-2 border-card shadow-sm md:h-14 md:w-14"
+          >
+            <SafeImage src={r.image} alt="" fill sizes="56px" className="object-cover" />
+          </span>
+        ))}
+        {more.length > faces.length && (
+          <span className="grid h-11 w-11 place-items-center rounded-full border-2 border-card bg-primary-bg text-xs font-bold text-primary md:h-14 md:w-14 md:text-sm">
+            +{more.length - faces.length}
+          </span>
+        )}
+      </span>
+      <span className="min-w-0 flex-1 md:flex-none">
+        <span className="block text-sm font-extrabold text-text md:text-lg">Browse all {total} restaurants</span>
+        <span className="mt-0.5 block text-xs text-text-muted md:text-sm">
+          {more.length} more kitchens deliver to you
+        </span>
+      </span>
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary text-white transition group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5">
+        <Icon name="alt-arrow-right-outline" size={18} className="rtl:rotate-180" />
+      </span>
+    </button>
+  );
+}
+
 function ProductSection({
   title,
   icon,
@@ -212,9 +258,9 @@ function ProductSection({
       <div className="mt-2.5 md:mt-4">
         {items.length === 0 ? (
           <EmptyCard
-            icon="bottle-bold"
-            title="No dishes found"
-            message="Try adjusting your filters or search again"
+            icon="chef-hat-outline"
+            title="Nothing here yet"
+            message="New dishes from kitchens near you will show up here."
           />
         ) : (
           <div className="no-scrollbar -mx-5 flex gap-2.5 overflow-x-auto px-5 pb-1 md:mx-0 md:grid md:grid-cols-2 md:gap-6 md:overflow-visible md:px-0 lg:grid-cols-4">

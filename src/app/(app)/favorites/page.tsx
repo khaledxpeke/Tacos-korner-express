@@ -28,7 +28,7 @@ export default function FavoritesPage() {
 
   return (
     <>
-      <BackAppBar title="Favourites" fallbackHref="/profile" />
+      <BackAppBar title="Favourites" subtitle="Restaurants and dishes you've saved" fallbackHref="/profile" />
       <Page>
         {empty ? (
           <div className="mx-auto max-w-md">
@@ -52,7 +52,7 @@ export default function FavoritesPage() {
             <div className="mt-4">
               {view === "dishes" ? (
                 dishes.length === 0 ? (
-                  <EmptyCard icon="bottle-bold" title="No favourite dishes" />
+                  <EmptyCard icon="chef-hat-outline" title="No favourite dishes" />
                 ) : (
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5 lg:grid-cols-4">
                     {dishes.map((p, i) => (
@@ -61,7 +61,7 @@ export default function FavoritesPage() {
                   </div>
                 )
               ) : rests.length === 0 ? (
-                <EmptyCard icon="shop-bold" title="No favourite restaurants" />
+                <EmptyCard icon="shop-2-outline" title="No favourite restaurants" />
               ) : (
                 <div className="grid gap-3 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
                   {rests.map((r, i) => (

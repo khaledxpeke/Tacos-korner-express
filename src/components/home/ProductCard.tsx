@@ -55,15 +55,23 @@ export function ProductCard({
         className,
       )}
     >
-      <div className={cn("relative w-full", grid ? "h-28 md:h-52" : "h-20 md:h-52")}>
-        <Image
-          src={product.image}
-          alt={product.name}
-          fill
-          sizes="(max-width: 768px) 146px, 300px"
-          loading={eager ? "eager" : undefined}
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-        />
+      <div className="relative">
+        <div
+          className={cn(
+            "relative w-full overflow-hidden md:h-auto md:aspect-[4/3]",
+            grid ? "h-28" : "h-24",
+          )}
+        >
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            sizes="(max-width: 768px) 146px, 300px"
+            loading={eager ? "eager" : undefined}
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          <span className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-linear-to-b from-black/25 to-transparent" />
+        </div>
         <button
           type="button"
           aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
@@ -76,53 +84,63 @@ export function ProductCard({
           <FavoriteHeart saved={isFav} />
         </button>
         {product.isNew && (
-          <span className="absolute end-1.5 top-1.5 rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-bold text-white md:px-2 md:text-[10px]">
+          <span className="absolute end-2 top-2 rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-bold tracking-wide text-white shadow-sm md:px-2 md:text-[10px]">
             NEW
           </span>
         )}
+        <button
+          type="button"
+          aria-label={
+            inCart > 0
+              ? `${inCart} in cart, add another`
+              : product.isCustomizable
+                ? "Customize"
+                : "Add to cart"
+          }
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen(true);
+          }}
+          className={cn(
+            "absolute -bottom-4 end-2.5 z-10 grid h-8 min-w-8 place-items-center rounded-full px-1 shadow-md ring-2 ring-card transition-all duration-200 hover:scale-110 active:scale-95 md:-bottom-5 md:end-3 md:h-10 md:min-w-10",
+            inCart > 0
+              ? "bg-primary text-white"
+              : "bg-card text-primary hover:bg-primary hover:text-white",
+          )}
+        >
+          {inCart > 0 ? (
+            <span className="text-xs font-extrabold md:text-sm">{inCart}</span>
+          ) : (
+            <Icon name="add-bold" size={18} className="md:hidden" />
+          )}
+          {inCart === 0 && <Icon name="add-bold" size={22} className="hidden md:block" />}
+        </button>
+      </div>
+      <div className="flex flex-1 flex-col px-2.5 pb-2.5 pt-2 md:px-4 md:pb-4 md:pt-3">
+        <p className="line-clamp-2 h-[30px] pe-8 text-xs font-bold leading-[15px] text-text md:h-auto md:pe-10 md:text-base md:font-extrabold md:leading-snug">
+          {product.name}
+        </p>
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             router.push(`/restaurant/${restaurant.id}`);
           }}
-          className={cn(
-            "absolute bottom-1.5 start-1.5 flex items-center gap-1 rounded-full bg-black/55 px-1.5 py-[3px] text-[8px] font-bold text-white md:px-2 md:py-1 md:text-[10px]",
-            inCart > 0 ? "max-w-[calc(100%-5.5rem)]" : "max-w-[calc(100%-12px)]",
-          )}
+          className="mt-0.5 flex max-w-full items-center gap-1 self-start text-[10px] font-semibold text-text-muted transition hover:text-primary md:mt-1 md:text-xs"
         >
-          <Icon name="shop-bold" size={9} />
+          <Icon name="shop-outline" size={12} />
           <span className="truncate">{restaurant.name}</span>
         </button>
-        {inCart > 0 && (
-          <span className="absolute bottom-1.5 end-1.5 z-10 flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[10px] font-extrabold text-text shadow-md md:px-2.5 md:py-1.5 md:text-xs">
-            <Icon name="cart-large-2-bold" size={13} className="text-primary" />
-            ×{inCart}
-          </span>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col px-2.5 pb-2.5 pt-2 md:px-3.5 md:pb-3.5 md:pt-3">
-        <p className="line-clamp-2 h-[30px] text-xs font-bold leading-[15px] text-text md:h-auto md:text-base md:font-extrabold md:leading-snug">
-          {product.name}
-        </p>
-        <p className="mt-1 hidden text-xs text-text-muted md:line-clamp-2 md:text-sm">
+        <p className="mt-1.5 hidden text-xs text-text-muted md:line-clamp-2 md:text-sm">
           {product.description}
         </p>
-        <div className="mt-1.5 flex items-center justify-between md:mt-4">
+        <div className="mt-auto flex items-end justify-between pt-1.5 md:pt-3">
           <span className="text-[13px] font-extrabold text-primary md:text-lg">
             {money(product.price)}
           </span>
-          <button
-            type="button"
-            aria-label={product.isCustomizable ? "Customize" : "Add to cart"}
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpen(true);
-            }}
-            className="grid h-8 w-8 place-items-center rounded-xl bg-primary text-lg font-semibold leading-none text-white transition hover:bg-primary-dark md:h-9 md:w-9 md:text-xl"
-          >
-            +
-          </button>
+          {product.isCustomizable && (
+            <span className="hidden text-[11px] font-semibold text-text-muted md:inline">Customizable</span>
+          )}
         </div>
       </div>
     </div>

@@ -15,7 +15,7 @@ export function SegmentedToggle<T extends string>({
   className?: string;
 }) {
   return (
-    <div className={cn("flex rounded-[14px] bg-card-gray p-1", className)}>
+    <div className={cn("flex rounded-[14px] border border-border bg-card p-1", className)}>
       {options.map((o) => {
         const active = o.value === value;
         return (
@@ -26,7 +26,7 @@ export function SegmentedToggle<T extends string>({
             onClick={() => onChange(o.value)}
             className={cn(
               "flex flex-1 items-center justify-center gap-1.5 rounded-[11px] py-2.5 text-sm font-bold transition",
-              active ? "bg-card text-primary shadow-card" : "text-text-muted",
+              active ? "bg-primary text-white shadow-sm" : "text-text-body hover:bg-bg hover:text-text",
             )}
           >
             {o.label}
@@ -34,7 +34,7 @@ export function SegmentedToggle<T extends string>({
               <span
                 className={cn(
                   "rounded-full px-1.5 text-xs",
-                  active ? "bg-primary text-white" : "bg-border text-text-muted",
+                  active ? "bg-white text-primary" : "bg-bg text-text-muted",
                 )}
               >
                 {o.count}
@@ -83,7 +83,7 @@ export function OrderFilterTabs<T extends string>({
               <span
                 className={cn(
                   "grid h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-bold",
-                  on ? "bg-white text-primary" : "bg-card-gray text-text-muted",
+                  on ? "bg-white text-primary" : "bg-bg text-text-muted",
                 )}
               >
                 {o.count}

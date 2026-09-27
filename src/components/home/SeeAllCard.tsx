@@ -41,18 +41,25 @@ export function SeeAllCard({
       )}
       <h2 className="text-sm font-bold text-text md:text-2xl md:font-extrabold">{title}</h2>
       <span className="flex-1" />
-      {trailing ??
-        (onSeeAll && (
-          <button
-            type="button"
-            onClick={onSeeAll}
-            className="flex items-center gap-1 text-xs font-semibold text-text-body hover:text-text md:rounded-full md:bg-card-gray md:px-3.5 md:py-1.5 md:text-sm"
-          >
-            See all
-            <Icon name="alt-arrow-right-outline" size={14} className="hidden rtl:rotate-180 md:block" />
-          </button>
-        ))}
+      <div className="flex items-center gap-2">
+        {trailing}
+        {onSeeAll && <SeeAllButton onClick={onSeeAll} />}
+      </div>
     </div>
+  );
+}
+
+/** White pill so it stands out from the grey page background. */
+export function SeeAllButton({ onClick, label = "See all" }: { onClick: () => void; label?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-1 text-xs font-semibold text-primary transition md:h-9 md:rounded-full md:border md:border-border md:bg-card md:px-3.5 md:text-sm md:text-text md:shadow-sm md:hover:border-primary/40 md:hover:text-primary"
+    >
+      {label}
+      <Icon name="alt-arrow-right-outline" size={14} className="rtl:rotate-180" />
+    </button>
   );
 }
 
@@ -67,7 +74,7 @@ export function RestaurantsViewToggle({
   onChange: (v: RestaurantsView) => void;
 }) {
   return (
-    <div className="flex rounded-[10px] bg-card p-[3px]">
+    <div className="flex rounded-[10px] border border-border bg-card p-[3px] shadow-sm">
       {(
         [
           { v: "cards", icon: "widget-4-outline", label: "Cards" },

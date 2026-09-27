@@ -17,7 +17,7 @@ export function ReelsClient() {
       </p>
       <Link
         href="/home"
-        className="mt-8 rounded-[12px] bg-gradient-to-r from-primary to-primary-dark px-8 py-3 text-sm font-bold text-white shadow-card"
+        className="mt-8 rounded-[12px] bg-linear-to-r from-primary to-primary-dark px-8 py-3 text-sm font-bold text-white shadow-card"
       >
         Browse restaurants
       </Link>

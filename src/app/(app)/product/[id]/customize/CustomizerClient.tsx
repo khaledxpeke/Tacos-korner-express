@@ -14,6 +14,8 @@ import { useSnackbar } from "@/context/SnackbarContext";
 import { restaurantOf } from "@/data/home";
 import type { CartCustomization, CartItem, IngredientModel, ProductModel, ProductTypeModel } from "@/data/models";
 import { cn, money } from "@/lib/utils";
+import { OptionThumb } from "@/components/product/CustomizePanel";
+import { ingredientImage } from "@/data/ingredientImages";
 
 type Selection = Record<string, IngredientModel[]>;
 
@@ -261,7 +263,7 @@ export function CustomizerClient({
             onClick={submit}
             className={cn(
               "flex h-12 flex-1 items-center justify-between rounded-[12px] px-4 text-sm font-bold text-white transition",
-              isValid ? "bg-gradient-to-r from-primary to-primary-dark shadow-card" : "bg-text-muted/25 text-text-muted",
+              isValid ? "bg-linear-to-r from-primary to-primary-dark shadow-card" : "bg-text-muted/25 text-text-muted",
             )}
           >
             <span className="flex items-center gap-2">
@@ -291,6 +293,8 @@ function OptionGroup({
   const required = type.min > 0;
   const fulfilled = !required || count >= type.min;
   const single = type.max === 1;
+  // Same rule as the quick panel: one photo in the group gives every row a thumbnail slot.
+  const withPhotos = type.options.some((o) => ingredientImage(o.name));
 
   return (
     <section className="rounded-card border-[0.5px] border-border bg-card p-4 shadow-card">
@@ -346,6 +350,7 @@ function OptionGroup({
                 >
                   {isSelected && <Icon name="check-read-outline" size={14} />}
                 </span>
+                {withPhotos && <OptionThumb name={o.name} />}
                 <span className="flex-1 text-sm font-medium text-text">{o.name}</span>
                 <span className={cn("text-xs font-semibold", o.price > 0 ? "text-text-body" : "text-green")}>
                   {o.price > 0 ? `+${money(o.price)}` : "Free"}

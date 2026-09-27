@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { Icon } from "@/components/ui/Icon";
@@ -13,12 +13,15 @@ export function ReceiptSummaryCard({
   ctaIcon = "check-circle-bold",
   onCta,
   ctaDisabled,
+  cta,
   className,
 }: {
   ctaTitle?: string;
   ctaIcon?: string;
   onCta?: () => void;
   ctaDisabled?: boolean;
+  /** Replaces the default CTA button (e.g. the animated checkout button). */
+  cta?: ReactNode;
   className?: string;
 }) {
   const cart = useCart();
@@ -58,7 +61,8 @@ export function ReceiptSummaryCard({
             ${cart.total.toFixed(2)}
           </span>
         </div>
-        {onCta && (
+        {cta && <div className="mt-2.5">{cta}</div>}
+        {!cta && onCta && (
           <Button
             title={ctaTitle}
             icon={ctaIcon}

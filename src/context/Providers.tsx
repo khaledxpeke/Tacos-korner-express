@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { AddressBookProvider } from "./AddressBookContext";
 import { CartProvider } from "./CartContext";
 import { FulfillmentProvider } from "./FulfillmentContext";
 import { FavoritesProvider } from "./FavoritesContext";
@@ -15,7 +16,9 @@ export function Providers({ children }: { children: ReactNode }) {
         <SnackbarProvider>
           <FavoritesProvider>
             <CartProvider>
-              <FulfillmentProvider>{children}</FulfillmentProvider>
+              <FulfillmentProvider>
+                <AddressBookProvider>{children}</AddressBookProvider>
+              </FulfillmentProvider>
             </CartProvider>
           </FavoritesProvider>
         </SnackbarProvider>

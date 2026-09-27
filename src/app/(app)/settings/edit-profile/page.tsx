@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { AddressFormFields, AllergySelector, type AddressForm } from "@/components/auth/AuthWidgets";
+import { AllergySelector } from "@/components/auth/AuthWidgets";
+import { AvatarEditor } from "@/components/profile/AvatarEditor";
 import { BackAppBar } from "@/components/layout/BackAppBar";
 import { Page, PageFooter } from "@/components/layout/Page";
 import { Button } from "@/components/ui/Button";
@@ -19,7 +19,7 @@ const genders = [
   { v: "other", label: "Prefer not to say" },
 ];
 
-/** Mirrors `edit_profile_screen.dart`. Saves nowhere; shows a snackbar. */
+/** Personal details and allergies. Addresses live on /settings/addresses. Saves nowhere; shows a snackbar. */
 export default function EditProfilePage() {
   const router = useRouter();
   const snack = useSnackbar();
@@ -31,13 +31,6 @@ export default function EditProfilePage() {
     birthday: "1998-06-15",
   });
   const [gender, setGender] = useState("male");
-  const [address, setAddress] = useState<AddressForm>({
-    label: "Home",
-    street: fakeUser.address,
-    city: fakeUser.city,
-    postalCode: fakeUser.postalCode,
-    notes: "Floor 3, ring twice",
-  });
   const [allergies, setAllergies] = useState<string[]>(["Nuts"]);
 
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -50,32 +43,12 @@ export default function EditProfilePage() {
 
   return (
     <>
-      <BackAppBar title="Edit Profile" fallbackHref="/settings" />
+      <BackAppBar title="Edit Profile" subtitle="Update your details and the allergies we flag" fallbackHref="/profile" />
       <Page>
-        <div className="mx-auto flex max-w-4xl flex-col gap-5">
-          <div className="flex items-center gap-4">
-            <span className="relative shrink-0">
-              <span className="relative block h-20 w-20 overflow-hidden rounded-full ring-4 ring-card shadow-card">
-                <Image src={fakeUser.avatar} alt="" fill sizes="80px" className="object-cover" />
-              </span>
-              <button
-                type="button"
-                aria-label="Change photo"
-                onClick={() => snack.show("Photo picker is UI only", "info")}
-                className="absolute -bottom-0.5 -end-0.5 grid h-8 w-8 place-items-center rounded-full bg-primary text-white shadow-card hover:bg-primary-dark"
-              >
-                <Icon name="camera-outline" size={15} />
-              </button>
-            </span>
-            <div className="min-w-0">
-              <h2 className="truncate text-lg font-extrabold text-text">
-                {f.first} {f.last}
-              </h2>
-              <p className="truncate text-sm text-text-muted">{f.email}</p>
-            </div>
-          </div>
+        <div className="mx-auto flex max-w-2xl flex-col gap-5">
+          <AvatarEditor />
 
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="flex flex-col gap-5">
             <Card className="p-5">
               <h3 className="text-sm font-extrabold text-text">Personal</h3>
               <p className="mt-0.5 text-xs text-text-muted">How we reach you and what we remember.</p>
@@ -96,7 +69,7 @@ export default function EditProfilePage() {
                     value={f.birthday}
                     max={new Date().toISOString().slice(0, 10)}
                     onChange={set("birthday")}
-                    className="h-12 w-full rounded-[12px] border border-border bg-card px-4 text-sm text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                    className="h-12 w-full rounded-[12px] border border-border bg-card px-4 text-sm text-text outline-none transition focus:border-amber focus:ring-2 focus:ring-amber/25"
                   />
                 </label>
                 <div>
@@ -116,26 +89,18 @@ export default function EditProfilePage() {
             </Card>
 
             <Card className="p-5">
-              <h3 className="text-sm font-extrabold text-text">Default address</h3>
-              <p className="mt-0.5 text-xs text-text-muted">Start typing and pick a suggested street.</p>
+              <h3 className="text-sm font-extrabold text-text">Allergies</h3>
+              <p className="mt-0.5 text-xs text-text-muted">
+                We flag dishes that contain these. Add another if yours is not listed.
+              </p>
               <div className="mt-4">
-                <AddressFormFields value={address} onChange={setAddress} />
+                <AllergySelector value={allergies} onChange={setAllergies} />
               </div>
             </Card>
           </div>
 
-          <Card className="p-5">
-            <h3 className="text-sm font-extrabold text-text">Allergies</h3>
-            <p className="mt-0.5 text-xs text-text-muted">
-              We flag dishes that contain these. Add another if yours is not listed.
-            </p>
-            <div className="mt-4">
-              <AllergySelector value={allergies} onChange={setAllergies} />
-            </div>
-          </Card>
-
-          <div className="hidden justify-end md:flex">
-            <div className="w-52">
+          <div className="hidden justify-center md:flex">
+            <div className="w-64">
               <Button title="Save changes" icon="check-circle-bold" onClick={save} />
             </div>
           </div>

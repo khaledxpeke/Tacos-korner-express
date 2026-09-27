@@ -10,8 +10,10 @@ import { SafeImage } from "@/components/ui/SafeImage";
 import { useCart } from "@/context/CartContext";
 import { useSnackbar } from "@/context/SnackbarContext";
 import { restaurantOf } from "@/data/home";
+import { ingredientImage } from "@/data/ingredientImages";
 import type { CartCustomization, IngredientModel, ProductModel, ProductTypeModel } from "@/data/models";
 import { cn, money } from "@/lib/utils";
+import { useBodyScrollLock, useEscapeKey } from "@/lib/useBodyScrollLock";
 
 /** Build-your-own panel on the restaurant menu so the user never leaves the kitchen. */
 export function CustomizePanel({
@@ -32,6 +34,8 @@ export function CustomizePanel({
   const [qty, setQty] = useState(1);
   const [note, setNote] = useState("");
   const [ready, setReady] = useState(false);
+  useBodyScrollLock(true);
+  useEscapeKey(true, onClose);
 
   useEffect(() => {
     setReady(true);
@@ -85,7 +89,7 @@ export function CustomizePanel({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center md:p-8"
+      className="fade-in fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center md:p-8"
       onClick={(e) => e.stopPropagation()}
     >
       <button
@@ -183,6 +187,8 @@ export function OptionGroup({
   const required = type.min > 0;
   const fulfilled = !required || count >= type.min;
   const single = type.max === 1;
+  // Keep names aligned: if any option in the group has a photo, every row gets a thumbnail slot.
+  const withPhotos = type.options.some((o) => ingredientImage(o.name));
 
   return (
     <section className="rounded-card border-[0.5px] border-border bg-card p-4 shadow-card">
@@ -230,6 +236,7 @@ export function OptionGroup({
                 >
                   {isSelected && <Icon name="check-read-outline" size={14} />}
                 </span>
+                {withPhotos && <OptionThumb name={o.name} />}
                 <span className="flex-1 text-sm font-medium text-text">{o.name}</span>
                 <span className={cn("text-xs font-semibold", o.price > 0 ? "text-text-body" : "text-green")}>
                   {o.price > 0 ? `+${money(o.price)}` : "Free"}
@@ -240,5 +247,15 @@ export function OptionGroup({
         })}
       </ul>
     </section>
+  );
+}
+
+/** Ingredient photo for an option row; an empty tile keeps names aligned when an option has no photo. */
+export function OptionThumb({ name }: { name: string }) {
+  const src = ingredientImage(name);
+  return (
+    <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-[10px] bg-white ring-1 ring-border">
+      {src && <SafeImage src={src} alt="" fill sizes="36px" className="object-contain p-0.5" />}
+    </span>
   );
 }

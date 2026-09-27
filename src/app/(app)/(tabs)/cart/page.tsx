@@ -5,6 +5,7 @@ import { useState } from "react";
 import { CartLine } from "@/components/cart/CartLine";
 import { ProductCard } from "@/components/home/ProductCard";
 import { Container } from "@/components/layout/Container";
+import { CheckoutButton } from "@/components/cart/CheckoutButton";
 import { ReceiptSummaryCard } from "@/components/orders/ReceiptSummaryCard";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -48,12 +49,16 @@ export default function CartPage() {
         <Container className="flex h-[60px] items-center justify-between md:h-auto md:pt-8">
           <div>
             <h1 className="text-lg font-bold text-text md:text-2xl md:font-extrabold">My Cart</h1>
-            {!empty && (
-              <p className="hidden text-sm text-text-muted md:block">
-                {cart.itemCount} {cart.itemCount === 1 ? "item" : "items"} from{" "}
-                {restaurantCount} {restaurantCount === 1 ? "restaurant" : "restaurants"}
-              </p>
-            )}
+            <p className="text-xs text-text-muted md:text-sm">
+              {empty ? (
+                "Review your items before checking out"
+              ) : (
+                <>
+                  {cart.itemCount} {cart.itemCount === 1 ? "item" : "items"} from{" "}
+                  {restaurantCount} {restaurantCount === 1 ? "restaurant" : "restaurants"}
+                </>
+              )}
+            </p>
           </div>
           {!empty && (
             <button
@@ -157,7 +162,7 @@ export default function CartPage() {
                         }}
                         placeholder="TACO10"
                         aria-label="Promo code"
-                        className="h-10 min-w-0 flex-1 rounded-s-xl border border-e-0 border-border bg-bg px-3 text-sm font-semibold tracking-wide text-text uppercase outline-none placeholder:font-normal placeholder:normal-case placeholder:text-text-muted focus:border-primary"
+                        className="h-10 min-w-0 flex-1 rounded-s-xl border border-e-0 border-border bg-bg px-3 text-sm font-semibold tracking-wide text-text uppercase outline-none placeholder:font-normal placeholder:normal-case placeholder:text-text-muted focus:border-amber focus:ring-2 focus:ring-amber/25"
                       />
                       <button
                         type="submit"
@@ -224,11 +229,7 @@ export default function CartPage() {
                 </div>
 
                 <div className="hidden overflow-hidden rounded-card border-[0.5px] border-border shadow-card lg:block">
-                  <ReceiptSummaryCard
-                    ctaTitle="Proceed to Checkout"
-                    ctaIcon="alt-arrow-right-outline"
-                    onCta={() => router.push("/checkout")}
-                  />
+                  <ReceiptSummaryCard cta={<CheckoutButton onGo={() => router.push("/checkout")} />} />
                 </div>
               </aside>
             </div>
@@ -244,13 +245,7 @@ export default function CartPage() {
               <p className="text-[11px] text-text-muted">Total</p>
               <p className="text-lg font-extrabold text-text">{money(cart.total)}</p>
             </div>
-            <Button
-              title="Proceed to Checkout"
-              icon="alt-arrow-right-outline"
-              iconRight
-              className="flex-1"
-              onClick={() => router.push("/checkout")}
-            />
+            <CheckoutButton className="flex-1" onGo={() => router.push("/checkout")} />
           </Container>
         </div>
       )}

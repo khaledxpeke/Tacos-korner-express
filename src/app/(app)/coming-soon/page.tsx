@@ -14,7 +14,7 @@ export default async function ComingSoonPage({
   const { feature } = await searchParams;
   return (
     <>
-      <BackAppBar title={feature ?? "Coming soon"} fallbackHref="/home" />
+      <BackAppBar title={feature ?? "Coming soon"} subtitle="We're still working on this one" fallbackHref="/home" />
       <Page size="sm" className="flex flex-1 flex-col items-center justify-center text-center">
         <span className="grid h-24 w-24 place-items-center rounded-full bg-primary-bg text-primary">
           <Icon name="rocket-2-bold" size={48} />
@@ -26,7 +26,7 @@ export default async function ComingSoonPage({
         </p>
         <Link
           href="/home"
-          className="mt-8 rounded-[12px] bg-gradient-to-r from-primary to-primary-dark px-8 py-3 text-sm font-bold text-white shadow-card"
+          className="mt-8 rounded-[12px] bg-linear-to-r from-primary to-primary-dark px-8 py-3 text-sm font-bold text-white shadow-card"
         >
           Back to Home
         </Link>

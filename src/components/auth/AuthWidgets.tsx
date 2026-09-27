@@ -8,6 +8,7 @@ import { Dropdown, TextField } from "@/components/ui/Fields";
 import { Icon } from "@/components/ui/Icon";
 import { SelectableChip } from "@/components/ui/Misc";
 import { SafeImage } from "@/components/ui/SafeImage";
+import { addressTypes } from "@/context/AddressBookContext";
 import { allergenOptions } from "@/data/home";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +32,7 @@ export function AuthHeader({
   return (
     <div
       className={cn(
-        "rounded-b-[28px] bg-gradient-to-br px-7 pb-9 pt-14 text-white md:rounded-none md:bg-transparent md:bg-none md:px-0 md:pb-2 md:pt-0 md:text-text",
+        "rounded-b-[28px] bg-linear-to-br px-7 pb-9 pt-14 text-white md:rounded-none md:bg-transparent md:bg-none md:px-0 md:pb-2 md:pt-0 md:text-text",
         gradient,
       )}
     >
@@ -91,8 +92,8 @@ export function OtpBoxes({
             if (e.key === "Backspace" && !d && i > 0) refs.current[i - 1]?.focus();
           }}
           className={cn(
-            "h-13 w-11 rounded-[12px] border bg-card text-center text-xl font-bold text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/15",
-            d ? "border-primary" : "border-border",
+            "h-13 w-11 rounded-[12px] border bg-card text-center text-xl font-bold text-text outline-none focus:border-amber focus:ring-2 focus:ring-amber/25",
+            d ? "border-amber" : "border-border",
           )}
         />
       ))}
@@ -158,32 +159,67 @@ export function SocialButton({
   );
 }
 
+export const passwordRules = [
+  { label: "At least 8 characters", hint: "Password must contain at least 8 characters", test: (pw: string) => pw.length >= 8 },
+  { label: "One uppercase letter", hint: "Add an uppercase letter", test: (pw: string) => /[A-Z]/.test(pw) },
+  { label: "One lowercase letter", hint: "Add a lowercase letter", test: (pw: string) => /[a-z]/.test(pw) },
+  { label: "One number", hint: "Add a number", test: (pw: string) => /[0-9]/.test(pw) },
+  { label: "One special character", hint: "Add a special character", test: (pw: string) => /[^A-Za-z0-9]/.test(pw) },
+];
+
+/** Number of rules met, 0..5. */
 export function passwordStrength(pw: string) {
-  let score = 0;
-  if (pw.length >= 8) score++;
-  if (/[A-Z]/.test(pw)) score++;
-  if (/[0-9]/.test(pw)) score++;
-  if (/[^A-Za-z0-9]/.test(pw)) score++;
-  return score; // 0..4
+  return passwordRules.filter((r) => r.test(pw)).length;
 }
 
-/** Mirrors `password_strength_bar.dart`. */
+/** Length is mandatory; beyond that, three of the five rules is enough. */
+export function isPasswordAcceptable(pw: string) {
+  return pw.length >= 8 && passwordStrength(pw) >= 3;
+}
+
+/**
+ * Strength meter plus a live checklist. Hidden until the user starts typing,
+ * so it sits directly under the password field without cluttering the empty form.
+ */
 export function PasswordStrengthBar({ password }: { password: string }) {
-  const s = passwordStrength(password);
-  const colors = ["bg-border", "bg-danger", "bg-warning", "bg-blue", "bg-green"];
-  const labels = ["", "Weak", "Fair", "Good", "Strong"];
   if (!password) return null;
+  const met = passwordStrength(password);
+  // Five rules onto four segments: 1–2 weak, 3 fair, 4 good, 5 strong.
+  const level = met <= 2 ? 1 : met - 1;
+  const tone = ["", "danger", "warning", "blue", "green"][level];
+  const bar = { danger: "bg-danger", warning: "bg-warning", blue: "bg-blue", green: "bg-green" }[tone]!;
+  const text = { danger: "text-danger", warning: "text-warning", blue: "text-blue", green: "text-green" }[tone]!;
+  const firstMissing = passwordRules.find((r) => !r.test(password));
+
   return (
-    <div className="mt-2">
-      <div className="flex gap-1">
+    <div className="mt-2.5" aria-live="polite">
+      <p className={cn("text-sm", firstMissing ? text : "text-green")}>
+        {firstMissing ? firstMissing.hint : "Great, that's a strong password"}
+      </p>
+      <div className="mt-1.5 flex gap-1">
         {[1, 2, 3, 4].map((i) => (
-          <span
-            key={i}
-            className={cn("h-1 flex-1 rounded-full", i <= s ? colors[s] : "bg-border")}
-          />
+          <span key={i} className={cn("h-1 flex-1 rounded-full transition-colors", i <= level ? bar : "bg-border")} />
         ))}
       </div>
-      <p className="mt-1 text-[11px] text-text-muted">{labels[s]}</p>
+      <p className="mt-1.5 text-xs font-semibold text-text-muted">{["", "Weak", "Fair", "Good", "Strong"][level]}</p>
+      <ul className="mt-2 grid gap-x-4 gap-y-1.5 sm:grid-cols-2">
+        {passwordRules.map((r) => {
+          const ok = r.test(password);
+          return (
+            <li
+              key={r.label}
+              className={cn("flex items-center gap-2 text-sm transition-colors", ok ? "text-text" : "text-text-muted")}
+            >
+              <Icon
+                name={ok ? "check-circle-bold" : "close-circle-outline"}
+                size={16}
+                className={ok ? "text-green" : "text-text-muted-light"}
+              />
+              {r.label}
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
@@ -208,26 +244,42 @@ export const cities = [
 ];
 
 /** Mirrors `address_form_fields.dart`. */
+const defaultAddressTypes = addressTypes;
+
 export function AddressFormFields({
   value,
   onChange,
+  types = defaultAddressTypes,
+  disabledTypes = [],
 }: {
   value: AddressForm;
   onChange: (v: AddressForm) => void;
+  /** Label chips to offer. Defaults to every address type. */
+  types?: readonly { label: string; icon: string }[];
+  /** Labels already used elsewhere; shown but not selectable. */
+  disabledTypes?: readonly string[];
 }) {
   const set = (k: keyof AddressForm) => (v: string) => onChange({ ...value, [k]: v });
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-2">
-        {["Home", "Work", "Other"].map((l) => (
-          <SelectableChip
-            key={l}
-            label={l}
-            icon={l === "Home" ? "home-2-outline" : l === "Work" ? "case-outline" : "map-point-outline"}
-            selected={value.label === l}
-            onClick={() => set("label")(l)}
-          />
-        ))}
+      <div>
+        <span className="mb-1.5 block text-xs font-semibold text-text-body">Type</span>
+        <div className="flex flex-wrap gap-2">
+          {types.map((t) => {
+            const taken = disabledTypes.includes(t.label) && value.label !== t.label;
+            return (
+              <SelectableChip
+                key={t.label}
+                label={t.label}
+                icon={t.icon}
+                selected={value.label === t.label}
+                onClick={taken ? undefined : () => set("label")(t.label)}
+                className={taken ? "cursor-not-allowed opacity-40" : undefined}
+                trailing={taken ? <span className="text-[10px] font-medium">· used</span> : undefined}
+              />
+            );
+          })}
+        </div>
       </div>
       <div>
         <span className="mb-1.5 block text-xs font-semibold text-text-body">Street address</span>
@@ -311,7 +363,13 @@ export function AllergySelector({
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      {value.length > 0 && (
+        <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold text-primary">
+          <Icon name="shield-warning-outline" size={15} />
+          We&apos;ll flag dishes with {value.length === 1 ? value[0] : `these ${value.length} allergens`}
+        </p>
+      )}
+      <div className="flex flex-wrap gap-2">
         {allergenOptions.map((name) => {
           const on = value.includes(name);
           return (
@@ -321,19 +379,21 @@ export function AllergySelector({
               aria-pressed={on}
               onClick={() => toggle(name)}
               className={cn(
-                "flex items-center gap-2.5 rounded-2xl border p-2 text-start transition",
-                on ? "border-primary bg-primary-bg" : "border-border bg-card hover:border-text-muted",
+                "inline-flex items-center gap-2 rounded-full border py-1 ps-1 pe-3 text-sm font-semibold transition",
+                on
+                  ? "border-primary bg-primary-bg text-primary"
+                  : "border-border bg-card text-text hover:border-primary/40",
               )}
             >
-              <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl">
-                <SafeImage src={allergenImages[name]} alt="" fill sizes="44px" className="object-cover" />
+              <span className="relative h-7 w-7 shrink-0 overflow-hidden rounded-full">
+                <SafeImage src={allergenImages[name]} alt="" fill sizes="28px" className="object-cover" />
+                {on && (
+                  <span className="absolute inset-0 grid place-items-center bg-primary/80 text-white">
+                    <Icon name="check-read-outline" size={16} />
+                  </span>
+                )}
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-bold text-text">{name}</span>
-                <span className={cn("text-[11px] font-semibold", on ? "text-primary" : "text-text-muted")}>
-                  {on ? "Selected" : "Tap to add"}
-                </span>
-              </span>
+              {name}
             </button>
           );
         })}
@@ -405,9 +465,9 @@ export function AllergySelector({
         <button
           type="button"
           onClick={() => setAdding(true)}
-          className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1.5 text-xs font-bold text-text-body hover:border-primary hover:text-primary"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-dashed border-text-muted bg-card px-3.5 py-2 text-sm font-bold text-text shadow-card transition hover:border-primary hover:text-primary"
         >
-          <Icon name="add-circle-outline" size={15} />
+          <Icon name="add-circle-outline" size={17} className="text-primary" />
           Add another
         </button>
       )}

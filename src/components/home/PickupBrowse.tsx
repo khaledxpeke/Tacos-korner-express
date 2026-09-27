@@ -77,7 +77,7 @@ export function PickupBrowse({ restaurants }: { restaurants: RestaurantModel[] }
         <div className="mt-5">
           {restaurants.length === 0 ? (
             <EmptyCard
-              icon="shop-bold"
+              icon="shop-2-outline"
               title="No restaurants found"
               message="Try adjusting your filters or search again"
             />

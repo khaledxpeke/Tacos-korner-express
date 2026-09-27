@@ -12,7 +12,7 @@ export const metadata = { title: "About · Takos Korner" };
 export default function AboutPage() {
   return (
     <>
-      <BackAppBar title="About" fallbackHref="/settings" />
+      <BackAppBar title="About" subtitle="Who we are and what we cook" fallbackHref="/settings" />
       <Page>
         <Card className="flex flex-col items-center p-8 text-center md:flex-row md:items-center md:gap-8 md:p-10 md:text-start">
           <span className="grid h-24 w-24 shrink-0 place-items-center rounded-[28px] bg-primary-bg">

@@ -22,67 +22,65 @@ export default function SettingsPage() {
 
   return (
     <>
-      <BackAppBar
-        title="Settings"
-        subtitle="Account, language, and appearance"
-        fallbackHref="/profile"
-        trailing={
-          <button
-            type="button"
-            onClick={() => setLogout(true)}
-            className="hidden text-sm font-semibold text-danger hover:underline md:inline"
-          >
-            Log out
-          </button>
-        }
-      />
+      <BackAppBar title="Settings" subtitle="Language, appearance, and support" fallbackHref="/profile" />
       <Page className="md:py-5">
-        <div className="grid gap-5 md:grid-cols-2 md:gap-6">
-          <Section title="Account">
-            <Row title="Profile" description="Name, email, and photo" href="/settings/edit-profile" action="Edit" />
-            <Row title="Password" description="Change your password" href="/settings/change-password" action="Change" />
-          </Section>
-
-          <Section title="Orders">
-            <Row title="My orders" description="Active and past orders" href="/orders" action="View" />
-            <Row title="Favourites" description="Dishes and restaurants" href="/favorites" action="View" />
-            <Row title="Saved combos" description="Custom builds to reorder" href="/saved-combos" action="View" />
-          </Section>
-
+        <div className="mx-auto flex max-w-2xl flex-col gap-6">
           <Section title="Preferences">
             <LanguageRow />
-            <div className="flex items-center gap-4 px-5 py-3">
+            <div className="flex items-center gap-3 px-4 py-3 md:px-5">
+              <RowIcon icon="moon-outline" />
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold text-text">Dark mode</span>
                 <span className="block text-xs text-text-muted">{isDark ? "On" : "Off"}</span>
               </span>
               <Switch checked={isDark} onChange={toggle} label="Dark mode" />
             </div>
-            <Row title="Notifications" description="Orders and offers" href="/settings/notifications" action="Manage" />
           </Section>
 
           <Section title="Support">
-            <Row title="Help & support" description="FAQs and contact" href="/help" action="Open" />
-            <Row title="About" description="Takos Korner" href="/about" action="Open" />
-            <Row title="Rate the site" description="Coming soon" href="/coming-soon?feature=Ratings" action="Soon" />
+            <Row icon="question-circle-outline" title="Help & support" description="FAQs and contact" href="/help" />
+            <Row icon="info-circle-outline" title="About" description="Takos Korner" href="/about" />
+            <Row
+              icon="star-outline"
+              title="Rate the site"
+              description="Coming soon"
+              href="/coming-soon?feature=Ratings"
+              badge="Soon"
+            />
           </Section>
-        </div>
 
-        <button
-          type="button"
-          onClick={() => setLogout(true)}
-          className="mt-5 text-sm font-semibold text-danger md:hidden"
-        >
-          Log out
-        </button>
+          <Section title="Legal">
+            <Row
+              icon="document-text-outline"
+              title="Terms of Service"
+              description="Orders, payments, cancellations and refunds"
+              href="/terms"
+            />
+            <Row
+              icon="shield-user-outline"
+              title="Privacy Policy"
+              description="What we collect, why, and your rights"
+              href="/privacy"
+            />
+          </Section>
+
+          <button
+            type="button"
+            onClick={() => setLogout(true)}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-[12px] border border-danger/30 bg-card text-sm font-bold text-danger shadow-card transition hover:bg-danger-bg"
+          >
+            <Icon name="logout-2-outline" size={18} />
+            Log out
+          </button>
+        </div>
       </Page>
 
       <Dialog
         open={logout}
         onClose={() => setLogout(false)}
-        title="Logout"
-        message="Are you sure you want to logout?"
-        confirmText="Logout"
+        title="Log out"
+        message="Are you sure you want to log out?"
+        confirmText="Log out"
         danger
         onConfirm={() => {
           snack.show("Logged out", "info");
@@ -96,7 +94,7 @@ export default function SettingsPage() {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section>
-      <h2 className="mb-2 text-sm font-extrabold text-text">{title}</h2>
+      <h2 className="mb-2 px-1 text-sm font-extrabold text-text">{title}</h2>
       <div className="divide-y divide-border overflow-visible rounded-2xl border border-border bg-card shadow-card">
         {children}
       </div>
@@ -104,24 +102,42 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
+function RowIcon({ icon }: { icon: string }) {
+  return (
+    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary-bg text-primary">
+      <Icon name={icon} size={18} />
+    </span>
+  );
+}
+
 function Row({
+  icon,
   title,
   description,
   href,
-  action,
+  badge,
 }: {
+  icon: string;
   title: string;
   description: string;
   href: string;
-  action: string;
+  badge?: string;
 }) {
   return (
-    <Link href={href} className="flex items-center gap-4 px-5 py-3 text-start transition hover:bg-card-gray">
+    <Link href={href} className="group flex items-center gap-3 px-4 py-3 text-start transition hover:bg-bg md:px-5">
+      <RowIcon icon={icon} />
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-semibold text-text">{title}</span>
-        <span className="block text-xs text-text-muted">{description}</span>
+        <span className="block truncate text-xs text-text-muted">{description}</span>
       </span>
-      <span className="shrink-0 text-sm font-semibold text-primary">{action}</span>
+      {badge && (
+        <span className="shrink-0 rounded-full bg-bg px-2 py-0.5 text-[10px] font-bold text-text-muted">{badge}</span>
+      )}
+      <Icon
+        name="alt-arrow-right-outline"
+        size={18}
+        className="shrink-0 text-text-muted transition group-hover:translate-x-0.5 group-hover:text-primary rtl:rotate-180"
+      />
     </Link>
   );
 }
@@ -154,8 +170,9 @@ function LanguageRow() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-4 px-5 py-3 text-start transition hover:bg-card-gray"
+        className="flex w-full items-center gap-3 px-4 py-3 text-start transition hover:bg-bg md:px-5"
       >
+        <RowIcon icon="global-outline" />
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-semibold text-text">Language</span>
           <span className="block text-xs text-text-muted">Site language</span>

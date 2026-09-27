@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { products } from "@/data/home";
 import type { OrderModel } from "@/data/models";
 import { money } from "@/lib/utils";
+import { useBodyScrollLock, useEscapeKey } from "@/lib/useBodyScrollLock";
 
 function linePrice(name: string) {
   return products.find((p) => p.name === name)?.price;
@@ -19,13 +19,8 @@ export function OrderDetailsModal({
   order: OrderModel;
   onClose: () => void;
 }) {
-  useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  useBodyScrollLock(true);
+  useEscapeKey(true, onClose);
 
   return (
     <div

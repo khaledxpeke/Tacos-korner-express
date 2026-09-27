@@ -40,7 +40,7 @@ export function Button({
           ? "border-[1.5px] border-primary bg-transparent text-primary"
           : bgClass
             ? cn(bgClass, "text-white shadow-card")
-            : "bg-gradient-to-r from-primary to-primary-dark text-white shadow-card",
+            : "bg-linear-to-r from-primary to-primary-dark text-white shadow-card",
         isDisabled && "opacity-50",
         isLoading && "bg-none bg-text-muted/50",
         className,

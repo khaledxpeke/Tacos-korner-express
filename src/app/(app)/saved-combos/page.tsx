@@ -24,7 +24,7 @@ export default function SavedCombosPage() {
 
   return (
     <>
-      <BackAppBar title="Saved Combos" fallbackHref="/profile" />
+      <BackAppBar title="Saved Combos" subtitle="Your custom builds, ready to reorder" fallbackHref="/profile" />
       <Page>
         {cart.savedCombos.length === 0 ? (
           <div className="mx-auto max-w-md">

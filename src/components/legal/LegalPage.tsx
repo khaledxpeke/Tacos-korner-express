@@ -1,5 +1,7 @@
 import { BackAppBar } from "@/components/layout/BackAppBar";
 import { Page } from "@/components/layout/Page";
+import Link from "next/link";
+import { Icon } from "@/components/ui/Icon";
 import { Card } from "@/components/ui/Misc";
 
 export interface LegalSection {
@@ -11,10 +13,12 @@ export interface LegalSection {
 export function LegalPage({
   title,
   updated,
+  intro,
   sections,
 }: {
   title: string;
   updated: string;
+  intro?: string;
   sections: LegalSection[];
 }) {
   return (
@@ -37,6 +41,7 @@ export function LegalPage({
             <p className="rounded-[12px] bg-warning-bg px-3 py-2 text-xs text-warning">
               Placeholder text. Replace with the final legal copy before launch.
             </p>
+            {intro && <p className="mt-5 text-sm leading-relaxed text-text md:text-base">{intro}</p>}
             {sections.map((s, i) => (
               <section key={s.title} id={`s${i + 1}`} className="mt-6 scroll-mt-24">
                 <h2 className="text-base font-bold text-text">
@@ -49,6 +54,24 @@ export function LegalPage({
                 ))}
               </section>
             ))}
+            <div className="mt-8 flex flex-wrap gap-2 border-t border-border pt-5">
+              {[
+                { href: "/terms", label: "Terms of Service" },
+                { href: "/privacy", label: "Privacy Policy" },
+                { href: "/help", label: "Help & support" },
+              ]
+                .filter((l) => l.label !== title)
+                .map((l) => (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-text-body transition hover:border-primary/40 hover:text-primary"
+                  >
+                    {l.label}
+                    <Icon name="alt-arrow-right-outline" size={12} className="rtl:rotate-180" />
+                  </Link>
+                ))}
+            </div>
           </Card>
         </div>
       </Page>

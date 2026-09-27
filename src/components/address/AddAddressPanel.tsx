@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { AddressSuggestField, type AddressHit } from "@/components/layout/FulfillmentBar";
-import { Button } from "@/components/ui/Button";
+import { Button, SecondaryButton } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { useSnackbar } from "@/context/SnackbarContext";
 import type { MapPoint } from "./AddressPickerMap";
@@ -106,9 +106,9 @@ export function AddAddressPanel({
         <AddressPickerMap point={pin} onPick={(point) => void applyPoint(point)} />
       </div>
       {looking && <p className="mt-2 text-xs text-text-muted">Finding that address…</p>}
-      <div className="mt-3 flex gap-2">
-        <Button title="Save address" size="sm" onClick={save} />
-        <Button title="Cancel" size="sm" isTransparent onClick={onCancel} />
+      <div className="mt-4 grid grid-cols-[auto_1fr] gap-2">
+        <SecondaryButton title="Cancel" className="px-5 py-3 font-bold" onClick={onCancel} />
+        <Button title="Save address" onClick={save} />
       </div>
     </div>
   );

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { AuthHeader, OtpBoxes, PasswordStrengthBar, passwordStrength } from "@/components/auth/AuthWidgets";
+import { AuthHeader, OtpBoxes, PasswordStrengthBar, isPasswordAcceptable } from "@/components/auth/AuthWidgets";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/Fields";
 import { Icon } from "@/components/ui/Icon";
@@ -49,8 +49,8 @@ export default function ForgotPasswordPage() {
   }
 
   function reset() {
-    if (passwordStrength(pw) < 2) {
-      setError("Use 8+ chars with a number or capital");
+    if (!isPasswordAcceptable(pw)) {
+      setError("Meet the password requirements above");
       return;
     }
     if (pw !== confirm) {
@@ -71,12 +71,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <AuthHeader
-        title={titles[step]}
-        subtitle={subs[step]}
-        showBack
-        onBack={() => (step > 0 ? setStep((s) => (s - 1) as 0 | 1 | 2) : router.push("/login"))}
-      />
+      <AuthHeader title={titles[step]} subtitle={subs[step]} />
       <div className="flex flex-1 flex-col gap-4 px-7 py-7 md:px-0">
         {step === 0 && (
           <>
@@ -97,16 +92,36 @@ export default function ForgotPasswordPage() {
           <>
             <OtpBoxes value={otp} onChange={setOtp} />
             <Button title="Verify" onClick={verify} className="mt-4" />
+            <div className="flex items-center justify-center gap-2 text-sm text-text-body">
+              Didn&apos;t get it?
+              {seconds > 0 ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 font-semibold text-text shadow-card">
+                  <Icon name="clock-circle-outline" size={15} className="text-amber" />
+                  Resend in <span className="tabular-nums text-primary">0:{String(seconds).padStart(2, "0")}</span>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSeconds(30);
+                    snack.show("Code re-sent", "info");
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-primary-bg px-3 py-1.5 font-bold text-primary transition hover:bg-primary hover:text-white"
+                >
+                  <Icon name="restart-outline" size={15} />
+                  Resend code
+                </button>
+              )}
+            </div>
             <button
               type="button"
-              disabled={seconds > 0}
               onClick={() => {
-                setSeconds(30);
-                snack.show("Code re-sent", "info");
+                setOtp("");
+                setStep(0);
               }}
-              className="text-center text-xs font-semibold text-primary disabled:text-text-muted"
+              className="text-center text-sm font-semibold text-text-body underline-offset-2 hover:text-primary hover:underline"
             >
-              {seconds > 0 ? `Resend code in ${seconds}s` : "Resend code"}
+              Use a different email
             </button>
           </>
         )}

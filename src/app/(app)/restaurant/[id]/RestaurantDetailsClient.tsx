@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Container } from "@/components/layout/Container";
 import { ProductCard } from "@/components/home/ProductCard";
 import { RatingSummary, ReviewCard } from "@/components/restaurant/ReviewCard";
@@ -26,15 +26,17 @@ const RestaurantMiniMap = dynamic(
 export function RestaurantDetailsClient({ restaurant }: { restaurant: RestaurantModel }) {
   const snack = useSnackbar();
   const { isRestaurantFavorite, toggleRestaurant } = useFavorites();
+  // null = All: every category is listed; picking one filters the menu down to it.
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [q, setQ] = useState("");
-  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+  const menuTop = useRef<HTMLDivElement>(null);
 
   const menu = productsOfRestaurant(restaurant.id);
   const cats = Array.from(new Set(menu.map((p) => p.category)));
   const sections = useMemo(() => {
     const query = q.trim().toLowerCase();
     return cats
+      .filter((name) => !activeCat || name === activeCat)
       .map((name) => ({
         name,
         items: menu.filter(
@@ -42,39 +44,12 @@ export function RestaurantDetailsClient({ restaurant }: { restaurant: Restaurant
         ),
       }))
       .filter((section) => section.items.length > 0);
-  }, [cats, menu, q]);
+  }, [cats, menu, q, activeCat]);
 
-  useEffect(() => {
-    setActiveCat((current) =>
-      current && sections.some((s) => s.name === current) ? current : (sections[0]?.name ?? null),
-    );
-  }, [sections]);
-
-  useEffect(() => {
-    if (sections.length === 0) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const hit = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-        const name = hit?.target.getAttribute("data-menu-cat");
-        if (name) setActiveCat(name);
-      },
-      { rootMargin: "-35% 0px -55% 0px", threshold: 0 },
-    );
-    for (const section of sections) {
-      const node = sectionRefs.current[section.name];
-      if (node) observer.observe(node);
-    }
-    return () => observer.disconnect();
-  }, [sections]);
-
-  function goToCategory(name: string) {
+  function pickCategory(name: string | null) {
     setActiveCat(name);
-    if (q.trim()) setQ("");
-    requestAnimationFrame(() => {
-      sectionRefs.current[name]?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    const node = menuTop.current;
+    if (node && node.getBoundingClientRect().top < 0) node.scrollIntoView({ behavior: "smooth", block: "start" });
   }
   const reviews = reviewsOf(restaurant.id);
   const isFav = isRestaurantFavorite(restaurant.id);
@@ -99,13 +74,13 @@ export function RestaurantDetailsClient({ restaurant }: { restaurant: Restaurant
           sizes="100vw"
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-black/10" />
         <div className="absolute inset-x-0 bottom-0">
           <Container className="pb-4 text-white md:pb-6">
             <div className="flex items-center gap-2">
               <span
                 className={cn(
-                  "rounded-full px-2.5 py-[3px] text-[10px] font-bold md:px-3 md:py-1 md:text-xs",
+                  "rounded-full px-2.5 py-0.75 text-[10px] font-bold md:px-3 md:py-1 md:text-xs",
                   restaurant.isOpen ? "bg-green" : "bg-black/60",
                 )}
               >
@@ -175,8 +150,8 @@ export function RestaurantDetailsClient({ restaurant }: { restaurant: Restaurant
                 <InfoWithMap restaurant={restaurant} />
               </div>
 
-              <div className="mt-5">
-                <div className="sticky top-14 z-20 -mx-5 bg-bg/95 px-5 py-2.5 backdrop-blur md:top-[68px] md:mx-0 md:px-0">
+              <div ref={menuTop} className="mt-5 scroll-mt-16 md:scroll-mt-19">
+                <div className="sticky top-14 z-20 -mx-5 bg-bg/95 px-5 py-2.5 backdrop-blur md:top-17 md:mx-0 md:px-0">
                   <SearchField
                     placeholder="Search dishes…"
                     value={q}
@@ -185,12 +160,13 @@ export function RestaurantDetailsClient({ restaurant }: { restaurant: Restaurant
                   />
                   {cats.length > 0 && (
                     <div className="no-scrollbar mt-2.5 flex gap-2 overflow-x-auto">
+                      <SelectableChip label="All" selected={activeCat === null} onClick={() => pickCategory(null)} />
                       {cats.map((name) => (
                         <SelectableChip
                           key={name}
                           label={name}
                           selected={activeCat === name}
-                          onClick={() => goToCategory(name)}
+                          onClick={() => pickCategory(name)}
                         />
                       ))}
                     </div>
@@ -199,25 +175,20 @@ export function RestaurantDetailsClient({ restaurant }: { restaurant: Restaurant
                 {sections.length === 0 ? (
                   <EmptyCard
                     className="mt-4"
-                    icon="bottle-bold"
+                    icon="chef-hat-outline"
                     title={q.trim() ? "No matching dishes" : "No dishes yet."}
                     message={
                       q.trim()
-                        ? "Try another search or pick a different category."
+                        ? activeCat
+                          ? `Nothing in ${activeCat} matches. Try another search or pick All.`
+                          : "Try another search or pick a different category."
                         : "This restaurant is still adding its menu."
                     }
                   />
                 ) : (
                   <div className="mt-4 flex flex-col gap-8">
                     {sections.map((section, sectionIndex) => (
-                      <section
-                        key={section.name}
-                        data-menu-cat={section.name}
-                        ref={(node) => {
-                          sectionRefs.current[section.name] = node;
-                        }}
-                        className="scroll-mt-40 md:scroll-mt-48"
-                      >
+                      <section key={section.name}>
                         <h2 className="text-base font-extrabold text-text md:text-xl">
                           {section.name}
                         </h2>
@@ -238,7 +209,7 @@ export function RestaurantDetailsClient({ restaurant }: { restaurant: Restaurant
               </div>
             </div>
 
-            <aside className="flex flex-col gap-4 lg:order-2 lg:sticky lg:top-[92px] lg:self-start">
+            <aside className="flex flex-col gap-4 lg:order-2 lg:sticky lg:top-23 lg:self-start">
               <div className="hidden lg:block">
                 <InfoWithMap restaurant={restaurant} />
               </div>

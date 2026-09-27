@@ -11,7 +11,7 @@ export default function NotFound() {
       <p className="mt-2 text-sm text-text-body">That dish isn&apos;t on the menu.</p>
       <Link
         href="/home"
-        className="mt-8 rounded-[12px] bg-gradient-to-r from-primary to-primary-dark px-8 py-3 text-sm font-bold text-white shadow-card"
+        className="mt-8 rounded-[12px] bg-linear-to-r from-primary to-primary-dark px-8 py-3 text-sm font-bold text-white shadow-card"
       >
         Back to Home
       </Link>
