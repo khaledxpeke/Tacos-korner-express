@@ -13,7 +13,7 @@ export function CheckoutButton({
   icon = "alt-arrow-right-outline",
   doneLabel = "Let's go!",
   doneIcon = "cart-check-bold",
-  holdMs = 1500,
+  holdMs = 750,
   canGo,
   onGo,
   disabled,

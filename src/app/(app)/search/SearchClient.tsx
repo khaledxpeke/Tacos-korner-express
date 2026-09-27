@@ -7,6 +7,8 @@ import { Page } from "@/components/layout/Page";
 import { ProductCard } from "@/components/home/ProductCard";
 import { RestaurantCard } from "@/components/home/RestaurantCard";
 import { SeeAllCard } from "@/components/home/SeeAllCard";
+import { Button } from "@/components/ui/Button";
+import { BottomSheet } from "@/components/ui/Dialog";
 import { SearchField, Switch } from "@/components/ui/Fields";
 import { Icon } from "@/components/ui/Icon";
 import { EmptyCard, SelectableChip } from "@/components/ui/Misc";
@@ -27,6 +29,25 @@ interface Filters {
   sort: Sort;
 }
 
+const defaultFilters: Filters = {
+  category: null,
+  maxPrice: maxProductPrice,
+  openNow: false,
+  freeDelivery: false,
+  sort: "relevance",
+};
+
+/** Filters that differ from the defaults, for the badge on the phone filter button. */
+function activeFilterCount(f: Filters) {
+  return [
+    f.category != null,
+    f.maxPrice < maxProductPrice,
+    f.openNow,
+    f.freeDelivery,
+    f.sort !== "relevance",
+  ].filter(Boolean).length;
+}
+
 export function SearchClient({
   initialQuery,
   initialCategory,
@@ -36,13 +57,9 @@ export function SearchClient({
 }) {
   const [query, setQuery] = useState(initialQuery);
   const [scope, setScope] = useState<Scope>("all");
-  const [filters, setFilters] = useState<Filters>({
-    category: initialCategory,
-    maxPrice: maxProductPrice,
-    openNow: false,
-    freeDelivery: false,
-    sort: "relevance",
-  });
+  const [filters, setFilters] = useState<Filters>({ ...defaultFilters, category: initialCategory });
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const activeFilters = activeFilterCount(filters);
   const [recent, setRecent] = useLocalStorage<string[]>("recent_searches", []);
   const { mode } = useFulfillment();
   const router = useRouter();
@@ -94,7 +111,8 @@ export function SearchClient({
       <BackAppBar title="Search" subtitle="Restaurants and dishes" />
       <Page>
         <div className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start lg:gap-8">
-          <aside className="mb-5 rounded-2xl border-[0.5px] border-border bg-card p-5 shadow-card lg:sticky lg:top-24 lg:mb-0">
+          {/* Phones and tablets open the same fields in a sheet from the button beside the search box. */}
+          <aside className="hidden rounded-2xl border-[0.5px] border-border bg-card p-5 shadow-card lg:sticky lg:top-24 lg:block">
             <h2 className="text-base font-extrabold text-text">Filters</h2>
             <FilterFields
               filters={filters}
@@ -103,19 +121,40 @@ export function SearchClient({
             />
           </aside>
           <div>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            commit(query);
-          }}
-        >
-          <SearchField
-            autoFocus
-            placeholder="Search restaurants, dishes…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </form>
+        <div className="flex items-center gap-2">
+          <form
+            className="min-w-0 flex-1"
+            onSubmit={(e) => {
+              e.preventDefault();
+              commit(query);
+            }}
+          >
+            <SearchField
+              autoFocus
+              placeholder="Search restaurants, dishes…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </form>
+          <button
+            type="button"
+            onClick={() => setFiltersOpen(true)}
+            aria-label={activeFilters ? `Filters, ${activeFilters} active` : "Filters"}
+            className={cn(
+              "relative grid h-[46px] w-[46px] shrink-0 place-items-center rounded-full border shadow-card transition lg:hidden",
+              activeFilters
+                ? "border-primary bg-primary text-white"
+                : "border-border bg-card text-text hover:border-primary hover:text-primary",
+            )}
+          >
+            <Icon name="tuning-2-outline" size={20} />
+            {activeFilters > 0 && (
+              <span className="absolute -end-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-card px-1 text-[10px] font-extrabold text-primary ring-2 ring-primary">
+                {activeFilters}
+              </span>
+            )}
+          </button>
+        </div>
 
         <div className="mt-3 flex items-center gap-2">
           <div className="no-scrollbar flex flex-1 gap-2 overflow-x-auto">
@@ -235,6 +274,43 @@ export function SearchClient({
           </div>
         </div>
       </Page>
+
+      <BottomSheet open={filtersOpen} onClose={() => setFiltersOpen(false)} className="lg:hidden">
+        <div className="-mt-1 flex items-center gap-3 border-b border-border px-5 pb-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-bg text-primary">
+            <Icon name="tuning-2-outline" size={20} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-base font-extrabold text-text">Filters</span>
+            <span className="block text-xs text-text-muted">
+              {activeFilters ? `${activeFilters} active` : "Narrow down dishes and restaurants"}
+            </span>
+          </span>
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => setFiltersOpen(false)}
+            className="grid h-9 w-9 place-items-center rounded-full bg-card-gray text-text"
+          >
+            <Icon name="close-circle-bold" size={18} />
+          </button>
+        </div>
+        <FilterFields filters={filters} setFilters={setFilters} className="px-5 pt-4" />
+        <div className="mt-6 grid grid-cols-[auto_1fr] gap-3 px-5">
+          <button
+            type="button"
+            onClick={() => setFilters(defaultFilters)}
+            disabled={!activeFilters}
+            className="rounded-[12px] border border-border px-5 text-sm font-bold text-text transition hover:border-primary hover:text-primary disabled:opacity-40"
+          >
+            Reset
+          </button>
+          <Button
+            title={`Show ${(showProducts ? dishResults.length : 0) + (showRestaurants ? restaurantResults.length : 0)} results`}
+            onClick={() => setFiltersOpen(false)}
+          />
+        </div>
+      </BottomSheet>
     </>
   );
 }

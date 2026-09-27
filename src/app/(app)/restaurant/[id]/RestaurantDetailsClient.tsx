@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import { Container } from "@/components/layout/Container";
+import { HeroBackButton } from "@/components/layout/HeroBackButton";
 import { ProductCard } from "@/components/home/ProductCard";
 import { RatingSummary, ReviewCard } from "@/components/restaurant/ReviewCard";
 import { SearchField } from "@/components/ui/Fields";
@@ -75,6 +76,7 @@ export function RestaurantDetailsClient({ restaurant }: { restaurant: Restaurant
           className="object-cover"
         />
         <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-black/10" />
+        <HeroBackButton />
         <div className="absolute inset-x-0 bottom-0">
           <Container className="pb-4 text-white md:pb-6">
             <div className="flex items-center gap-2">

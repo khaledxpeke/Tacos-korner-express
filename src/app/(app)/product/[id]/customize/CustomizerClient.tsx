@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Container } from "@/components/layout/Container";
+import { HeroBackButton } from "@/components/layout/HeroBackButton";
 import { Button } from "@/components/ui/Button";
 import { TextArea } from "@/components/ui/Fields";
 import { Icon } from "@/components/ui/Icon";
@@ -110,13 +111,16 @@ export function CustomizerClient({
     } else {
       cart.addItem(item);
       snack.show(`${product.name} added to cart`, "success");
-      router.push(`/restaurant/${restaurant.id}`);
+      // Back to wherever the dish was tapped: home, search, a restaurant menu.
+      if (window.history.length > 1) router.back();
+      else router.push(`/restaurant/${restaurant.id}`);
     }
   }
 
   return (
     <>
       <div className="relative h-48 w-full md:hidden">
+        <HeroBackButton />
         <SafeImage
           src={product.image}
           alt={product.name}
@@ -132,9 +136,9 @@ export function CustomizerClient({
           <nav className="mb-6 hidden items-center gap-2 text-sm text-text-muted md:flex">
             <Link href="/home" className="hover:text-primary">Home</Link>
             <Icon name="alt-arrow-right-outline" size={14} className="rtl:rotate-180" />
-            <Link href={`/product/${product.id}`} className="hover:text-primary">{product.name}</Link>
+            <Link href={`/restaurant/${restaurant.id}`} className="hover:text-primary">{restaurant.name}</Link>
             <Icon name="alt-arrow-right-outline" size={14} className="rtl:rotate-180" />
-            <span className="text-text">{editing ? "Edit" : "Customize"}</span>
+            <span className="text-text">{product.name}</span>
           </nav>
 
           <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
@@ -145,12 +149,16 @@ export function CustomizerClient({
                   <SafeImage src={product.image} alt="" fill sizes="112px" className="object-cover" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <Badge tone="amber">
-                      <Icon name="tuning-2-bold" size={11} /> Build your own
-                    </Badge>
-                    {editing && <Badge tone="blue">Editing cart item</Badge>}
-                  </div>
+                  {(product.types.length > 0 || editing) && (
+                    <div className="flex items-center gap-2">
+                      {product.types.length > 0 && (
+                        <Badge tone="amber">
+                          <Icon name="tuning-2-bold" size={11} /> Build your own
+                        </Badge>
+                      )}
+                      {editing && <Badge tone="blue">Editing cart item</Badge>}
+                    </div>
+                  )}
                   <h1 className="mt-1.5 text-xl font-extrabold text-text md:text-3xl">{product.name}</h1>
                   <p className="mt-1 text-sm text-text-body">{product.description}</p>
                   <div className="mt-2 flex items-center gap-3 text-sm">

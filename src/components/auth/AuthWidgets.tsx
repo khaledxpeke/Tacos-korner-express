@@ -12,30 +12,23 @@ import { addressTypes } from "@/context/AddressBookContext";
 import { allergenOptions } from "@/data/home";
 import { cn } from "@/lib/utils";
 
-/** Mirrors `auth_header.dart`: gradient header with rounded bottom corners. */
+/** Mirrors `auth_header.dart`: brand gradient header with rounded bottom corners, the same on every auth screen. */
 export function AuthHeader({
   title,
   subtitle,
-  gradient = "from-primary to-primary-dark",
   showBack,
   onBack,
   footer,
 }: {
   title: string;
   subtitle: string;
-  gradient?: string;
   showBack?: boolean;
   onBack?: () => void;
   footer?: ReactNode;
 }) {
   const router = useRouter();
   return (
-    <div
-      className={cn(
-        "rounded-b-[28px] bg-linear-to-br px-7 pb-9 pt-14 text-white md:rounded-none md:bg-transparent md:bg-none md:px-0 md:pb-2 md:pt-0 md:text-text",
-        gradient,
-      )}
-    >
+    <div className="rounded-b-[28px] bg-linear-to-br from-primary to-primary-dark px-7 pb-9 pt-14 text-white md:rounded-none md:bg-transparent md:bg-none md:px-0 md:pb-2 md:pt-0 md:text-text">
       <div className="flex items-center gap-2.5">
         {showBack && (
           <button

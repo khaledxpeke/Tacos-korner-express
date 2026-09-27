@@ -3,13 +3,13 @@ import { productById, products } from "@/data/home";
 import { CustomizerClient } from "./CustomizerClient";
 
 export function generateStaticParams() {
-  return products.filter((p) => p.isCustomizable).map((p) => ({ id: p.id }));
+  return products.map((p) => ({ id: p.id }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const p = productById(id);
-  return { title: p ? `Customize ${p.name} · Takos Korner` : "Customize · Takos Korner" };
+  return { title: p ? `${p.name} · Takos Korner` : "Dish · Takos Korner" };
 }
 
 export default async function CustomizePage({

@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { SafeImage as Image } from "@/components/ui/SafeImage";
 import { useRouter } from "next/navigation";
-import { CustomizePanel } from "@/components/product/CustomizePanel";
 import { FavoriteHeart } from "@/components/ui/FavoriteHeart";
 import { Icon } from "@/components/ui/Icon";
 import { useCart } from "@/context/CartContext";
@@ -12,10 +10,7 @@ import { restaurantOf } from "@/data/home";
 import type { ProductModel } from "@/data/models";
 import { cn, money } from "@/lib/utils";
 
-/**
- * Dish tile. Click or + opens the same add-to-cart popup
- * (customize options when the dish has them).
- */
+/** Dish tile. The card and its + both open the dish builder. */
 export function ProductCard({
   product,
   grid,
@@ -32,7 +27,7 @@ export function ProductCard({
   const { isProductFavorite, toggleProduct } = useFavorites();
   const restaurant = restaurantOf(product);
   const isFav = isProductFavorite(product.name);
-  const [open, setOpen] = useState(false);
+  const openProduct = () => router.push(`/product/${product.id}/customize`);
   const inCart = cart.items
     .filter(
       (item) =>
@@ -42,15 +37,14 @@ export function ProductCard({
     .reduce((n, item) => n + item.quantity, 0);
 
   return (
-    <>
     <div
       role="button"
       tabIndex={0}
-      onClick={() => setOpen(true)}
-      onKeyDown={(e) => e.key === "Enter" && setOpen(true)}
+      onClick={openProduct}
+      onKeyDown={(e) => e.key === "Enter" && openProduct()}
       className={cn(
         "group flex shrink-0 cursor-pointer flex-col overflow-hidden rounded-card border-[0.5px] border-border bg-card text-start shadow-card transition hover:shadow-lg md:rounded-2xl",
-        !open && "hover:-translate-y-0.5",
+        "hover:-translate-y-0.5",
         grid ? "w-full" : "w-[146px] md:w-full",
         className,
       )}
@@ -99,7 +93,7 @@ export function ProductCard({
           }
           onClick={(e) => {
             e.stopPropagation();
-            setOpen(true);
+            openProduct();
           }}
           className={cn(
             "absolute -bottom-4 end-2.5 z-10 grid h-8 min-w-8 place-items-center rounded-full px-1 shadow-md ring-2 ring-card transition-all duration-200 hover:scale-110 active:scale-95 md:-bottom-5 md:end-3 md:h-10 md:min-w-10",
@@ -144,7 +138,5 @@ export function ProductCard({
         </div>
       </div>
     </div>
-    {open && <CustomizePanel product={product} onClose={() => setOpen(false)} />}
-    </>
   );
 }

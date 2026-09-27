@@ -10,7 +10,6 @@ import { AccountNav, useAccountLinks } from "@/components/profile/AccountNav";
 import { useFavorites } from "@/context/FavoritesContext";
 import { fakeUser } from "@/data/misc";
 import { orderStatusLabel, orders } from "@/data/orders";
-import { cn } from "@/lib/utils";
 
 /** Account overview — website layout with a side nav on desktop. */
 export default function ProfilePage() {
@@ -32,22 +31,18 @@ export default function ProfilePage() {
 
           <div>
             <Card className="overflow-hidden">
-              <div className="flex flex-col gap-4 p-5 md:flex-row md:items-center">
-                <UserAvatar className="h-20 w-20 ring-2 ring-border md:h-24 md:w-24" initialsClass="text-2xl" />
-                <div className="flex-1">
-                  <p className="text-lg font-extrabold text-text md:text-2xl">
+              <div className="flex items-center gap-4 p-5">
+                <UserAvatar
+                  className="h-16 w-16 shrink-0 ring-2 ring-border md:h-24 md:w-24"
+                  initialsClass="text-xl md:text-2xl"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-lg font-extrabold text-text md:text-2xl">
                     {fakeUser.firstName} {fakeUser.lastName}
                   </p>
-                  <p className="text-sm text-text-muted">{fakeUser.email}</p>
+                  <p className="truncate text-sm text-text-muted">{fakeUser.email}</p>
                   <p className="mt-0.5 text-xs text-text-muted">Member since {fakeUser.memberSince}</p>
                 </div>
-                <Link
-                  href="/settings/edit-profile"
-                  className="inline-flex h-10 items-center gap-1.5 self-start rounded-full bg-primary-bg px-4 text-sm font-bold text-primary"
-                >
-                  <Icon name="pen-outline" size={14} />
-                  Edit profile
-                </Link>
               </div>
               <div className="grid grid-cols-3 divide-x divide-border border-t border-border">
                 <Stat value={String(orders.length)} label="Orders" href="/orders" />
@@ -57,6 +52,24 @@ export default function ProfilePage() {
             </Card>
 
             <PointsCard points={fakeUser.points} />
+
+            <div className="mt-5 grid grid-cols-2 gap-3 lg:hidden">
+              {accountLinks.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="flex flex-col gap-2.5 rounded-card border-[0.5px] border-border bg-card p-3.5 shadow-card transition active:scale-[0.98]"
+                >
+                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary-bg text-primary">
+                    <Icon name={l.icon} size={19} />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-bold text-text">{l.title}</span>
+                    {l.sub && <span className="block truncate text-[11px] text-text-muted">{l.sub}</span>}
+                  </span>
+                </Link>
+              ))}
+            </div>
 
             <section className="mt-5">
               <div className="flex items-center justify-between">
@@ -84,25 +97,6 @@ export default function ProfilePage() {
                 ))}
               </div>
             </section>
-
-            <div className="mt-5 grid gap-2 lg:hidden">
-              {accountLinks.map((l) => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-card border-[0.5px] border-border bg-card px-4 py-3 shadow-card",
-                  )}
-                >
-                  <Icon name={l.icon} size={20} className="text-primary" />
-                  <span className="flex-1">
-                    <span className="block text-sm font-bold text-text">{l.title}</span>
-                    {l.sub && <span className="block text-xs text-text-muted">{l.sub}</span>}
-                  </span>
-                  <Icon name="alt-arrow-right-outline" size={16} className="text-text-muted rtl:rotate-180" />
-                </Link>
-              ))}
-            </div>
           </div>
         </div>
       </Container>

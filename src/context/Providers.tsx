@@ -6,6 +6,7 @@ import { CartProvider } from "./CartContext";
 import { FulfillmentProvider } from "./FulfillmentContext";
 import { FavoritesProvider } from "./FavoritesContext";
 import { LanguageProvider } from "./LanguageContext";
+import { SessionProvider } from "./SessionContext";
 import { SnackbarProvider } from "./SnackbarContext";
 import { ThemeProvider } from "./ThemeContext";
 
@@ -14,13 +15,15 @@ export function Providers({ children }: { children: ReactNode }) {
     <ThemeProvider>
       <LanguageProvider>
         <SnackbarProvider>
-          <FavoritesProvider>
-            <CartProvider>
-              <FulfillmentProvider>
-                <AddressBookProvider>{children}</AddressBookProvider>
-              </FulfillmentProvider>
-            </CartProvider>
-          </FavoritesProvider>
+          <SessionProvider>
+            <FavoritesProvider>
+              <CartProvider>
+                <FulfillmentProvider>
+                  <AddressBookProvider>{children}</AddressBookProvider>
+                </FulfillmentProvider>
+              </CartProvider>
+            </FavoritesProvider>
+          </SessionProvider>
         </SnackbarProvider>
       </LanguageProvider>
     </ThemeProvider>

@@ -101,7 +101,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="no-scrollbar -mx-5 mt-1 flex gap-2.5 overflow-x-auto px-5 py-1 md:mx-0 md:mt-0 md:grid md:grid-cols-9 md:gap-3 md:overflow-visible md:px-0 md:py-0">
+        <div className="no-scrollbar mt-1 flex gap-2.5 overflow-x-auto py-1 md:mx-0 md:mt-0 md:grid md:grid-cols-9 md:gap-3 md:overflow-visible md:px-0 md:py-0">
           <CategoryCard
             category={{ name: "All", icon: "🍽️", color: "#F0F2F5" }}
             active={category === null}
@@ -263,7 +263,7 @@ function ProductSection({
             message="New dishes from kitchens near you will show up here."
           />
         ) : (
-          <div className="no-scrollbar -mx-5 flex gap-2.5 overflow-x-auto px-5 pb-1 md:mx-0 md:grid md:grid-cols-2 md:gap-6 md:overflow-visible md:px-0 lg:grid-cols-4">
+          <div className="no-scrollbar flex gap-2.5 overflow-x-auto py-1 md:mx-0 md:grid md:grid-cols-2 md:gap-6 md:overflow-visible md:px-0 lg:grid-cols-4">
             {items.map((p, i) => (
               <ProductCard key={p.id} product={p} eager={i === 0} />
             ))}

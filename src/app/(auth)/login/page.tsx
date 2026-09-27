@@ -7,6 +7,7 @@ import { AuthHeader, SocialButton } from "@/components/auth/AuthWidgets";
 import { Button } from "@/components/ui/Button";
 import { Checkbox, TextField } from "@/components/ui/Fields";
 import { useFulfillment } from "@/context/FulfillmentContext";
+import { useSession } from "@/context/SessionContext";
 import { useSnackbar } from "@/context/SnackbarContext";
 import { fakeUser } from "@/data/misc";
 
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const router = useRouter();
   const snack = useSnackbar();
   const { saveAddress, address } = useFulfillment();
+  const session = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
@@ -33,6 +35,7 @@ export default function LoginPage() {
     setLoading(true);
     setTimeout(() => {
       window.localStorage.setItem("tk_onboarded", "1");
+      session.signIn();
       if (!address.trim()) {
         saveAddress(`${fakeUser.address}, ${fakeUser.city}`, "delivery");
       }
@@ -96,9 +99,17 @@ export default function LoginPage() {
             Sign up
           </Link>
         </p>
-        <Link href="/" className="text-center text-xs font-semibold text-text-muted">
+        <button
+          type="button"
+          onClick={() => {
+            // The welcome screen asks for delivery / pickup and an address, then makes them a guest.
+            session.signOut();
+            router.push("/");
+          }}
+          className="text-center text-xs font-semibold text-text-muted hover:text-primary"
+        >
           Continue as guest
-        </Link>
+        </button>
       </form>
     </div>
   );

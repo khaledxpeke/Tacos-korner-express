@@ -181,9 +181,20 @@ export default function NotificationSettingsPage() {
 
           <div className={cn("grid gap-5 md:grid-cols-2", off && "pointer-events-none opacity-50")} aria-disabled={off}>
             <div className="flex flex-col gap-5">
-              <Group title="Pause notifications" hint="Silence everything for a while.">
+              <Group title="Pause & quiet hours" hint="Silence everything for a while, or on a schedule.">
                 <div className="px-4 py-4 md:px-5">
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex items-center gap-3">
+                    <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-xl", tones.amber)}>
+                      <Icon name="pause-circle-outline" size={18} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold text-text">Pause for</span>
+                      <span className="block text-xs text-text-muted">
+                        {paused ? `Until ${formatTime(prefs.pausedUntil!)}` : "Not paused"}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
                     {pauses.map((p) => {
                       const on = prefs.pause === p.key;
                       return (
@@ -205,9 +216,6 @@ export default function NotificationSettingsPage() {
                     })}
                   </div>
                 </div>
-              </Group>
-
-              <Group title="Quiet hours" hint="Silent on a schedule, like every night.">
                 <ToggleRow
                   icon="moon-sleep-outline"
                   tone="purple"
@@ -252,12 +260,12 @@ export default function NotificationSettingsPage() {
                         </button>
                       ))}
                     </div>
-                    <p className="flex items-center gap-1.5 text-xs text-text-muted">
-                      <Icon name="info-circle-outline" size={14} />
-                      Order status updates always come through.
-                    </p>
                   </div>
                 )}
+                <p className="flex items-center gap-1.5 px-4 py-3 text-xs text-text-muted md:px-5">
+                  <Icon name="info-circle-outline" size={14} />
+                  Order status updates always come through.
+                </p>
               </Group>
 
               <Group title="Channels">

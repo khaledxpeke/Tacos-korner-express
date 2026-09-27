@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import { Button, SecondaryButton } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
+import { addressTypeIcon, formatAddress, useAddressBook } from "@/context/AddressBookContext";
 import { useFulfillment, type OrderMode } from "@/context/FulfillmentContext";
+import { useSession } from "@/context/SessionContext";
+import { useSnackbar } from "@/context/SnackbarContext";
 import { cn } from "@/lib/utils";
 import { useBodyScrollLock, useEscapeKey } from "@/lib/useBodyScrollLock";
 
@@ -41,6 +44,7 @@ export function AddressSuggestField({
 }) {
   const [hits, setHits] = useState<AddressHit[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
+  const [focused, setFocused] = useState(!!autoFocus);
 
   useEffect(() => {
     const query = value.trim();
@@ -80,6 +84,8 @@ export function AddressSuggestField({
           id={id}
           value={value}
           autoFocus={autoFocus}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           onChange={(e) => {
             const next = e.target.value;
             onChange(next);
@@ -103,8 +109,12 @@ export function AddressSuggestField({
           {status === "loading" && <Spinner />}
         </div>
       </div>
-      {(status !== "idle" || hits.length > 0) && (
-        <div className="thin-scrollbar mt-2 max-h-60 overflow-y-auto rounded-2xl border border-border bg-card shadow-card">
+      {focused && (status !== "idle" || hits.length > 0) && (
+        <div
+          // Keeps the input focused while a suggestion is pressed, so the list stays until the pick lands.
+          onMouseDown={(e) => e.preventDefault()}
+          className="thin-scrollbar mt-2 max-h-60 overflow-y-auto rounded-2xl border border-border bg-card shadow-card"
+        >
           {status === "loading" && hits.length === 0 && (
             <p className="flex items-center gap-2 px-4 py-3 text-sm text-text-muted">
               <Spinner /> Looking up addresses…
@@ -128,6 +138,7 @@ export function AddressSuggestField({
                     onClick={() => {
                       onChange(item.label);
                       onPick?.(item);
+                      setFocused(false);
                     }}
                     className={cn(
                       "flex w-full items-start gap-3 px-4 py-2.5 text-start transition",
@@ -255,9 +266,41 @@ export function AddressLookup({
   onSaved?: () => void;
 }) {
   const { mode, address, closeEditor, saveAddress } = useFulfillment();
+  const { isMember } = useSession();
+  const book = useAddressBook();
+  const snack = useSnackbar();
   const [draft, setDraft] = useState(address);
   const [draftMode, setDraftMode] = useState<OrderMode>(mode);
+  const [locating, setLocating] = useState(false);
   const canSave = draft.trim().length >= 4;
+  const saved = isMember ? book.addresses.map((a) => ({ ...a, line: formatAddress(a) })) : [];
+
+  function useCurrentLocation() {
+    if (!navigator.geolocation) {
+      snack.show("Location is not available in this browser", "error");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        try {
+          const res = await fetch(`/api/addresses?lat=${lat}&lon=${lng}`);
+          const data = (await res.json()) as { label?: string };
+          setDraft(data.label?.trim() || `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+        } catch {
+          setDraft(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+        } finally {
+          setLocating(false);
+        }
+      },
+      () => {
+        setLocating(false);
+        snack.show("Could not get your location", "error");
+      },
+      { enableHighAccuracy: true, timeout: 8000 },
+    );
+  }
 
   const save = (
     <Button
@@ -305,6 +348,66 @@ export function AddressLookup({
       <div className="mt-1.5">
         <AddressSuggestField id="delivery-address" value={draft} onChange={setDraft} />
       </div>
+
+      <button
+        type="button"
+        onClick={useCurrentLocation}
+        disabled={locating}
+        className="mt-3 flex w-full items-center gap-3 rounded-2xl border border-amber/60 bg-amber-bg px-3 py-2.5 text-start transition hover:border-amber disabled:cursor-wait"
+      >
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-card text-amber">
+          {locating ? <Spinner /> : <Icon name="gps-outline" size={18} />}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold text-text">{locating ? "Finding you…" : "Use current location"}</span>
+          <span className="block text-xs text-text-muted">We fill in the street where you are</span>
+        </span>
+      </button>
+
+      {saved.length > 0 && (
+        <div className="mt-4">
+          <p className="text-sm font-semibold text-text">Saved addresses</p>
+          <ul className="mt-1.5 flex flex-col gap-2">
+            {saved.map((a) => {
+              const on = draft.trim() === a.line;
+              return (
+                <li key={a.id}>
+                  <button
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => setDraft(a.line)}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-start transition",
+                      on ? "border-primary bg-primary-bg" : "border-border bg-card hover:border-primary/40",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "grid h-9 w-9 shrink-0 place-items-center rounded-xl",
+                        on ? "bg-primary text-white" : "bg-bg text-text-body",
+                      )}
+                    >
+                      <Icon name={addressTypeIcon(a.type)} size={18} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-1.5 text-sm font-bold text-text">
+                        {a.type}
+                        {a.isDefault && (
+                          <span className="rounded-full bg-bg px-1.5 py-0.5 text-[10px] font-bold text-text-muted">
+                            Default
+                          </span>
+                        )}
+                      </span>
+                      <span className="block truncate text-xs text-text-muted">{a.line}</span>
+                    </span>
+                    {on && <Icon name="check-circle-bold" size={18} className="shrink-0 text-primary" />}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       {cancelable ? (
         <div className="mt-5 grid grid-cols-[auto_1fr] gap-3">

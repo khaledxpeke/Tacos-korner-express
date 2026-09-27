@@ -9,13 +9,14 @@ import { FulfillmentBar } from "./FulfillmentBar";
 import { Icon } from "@/components/ui/Icon";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useCart } from "@/context/CartContext";
+import { useSession } from "@/context/SessionContext";
 import { notifications } from "@/data/misc";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "/home", label: "Home" },
-  { href: "/orders", label: "Orders" },
-  { href: "/favorites", label: "Favorites" },
+  { href: "/home", label: "Home", memberOnly: false },
+  { href: "/orders", label: "Orders", memberOnly: true },
+  { href: "/favorites", label: "Favorites", memberOnly: true },
 ];
 
 /** Desktop / tablet site header. Hidden on phones where the app bar and bottom nav take over. */
@@ -23,6 +24,7 @@ export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { itemCount } = useCart();
+  const { isGuest } = useSession();
   const [q, setQ] = useState("");
   const unread = notifications.filter((n) => !n.read).length;
 
@@ -44,7 +46,7 @@ export function SiteHeader() {
         <FulfillmentBar className="shrink-0" />
 
         <nav className="flex items-center gap-1">
-          {links.map((l) => {
+          {links.filter((l) => !isGuest || !l.memberOnly).map((l) => {
             const active = pathname === l.href || pathname.startsWith(l.href + "/");
             return (
               <Link
@@ -98,16 +100,26 @@ export function SiteHeader() {
           >
             <Icon name="magnifier-outline" size={22} />
           </Link>
-          <Link
-            href="/notifications"
-            aria-label="Notifications"
-            className="relative grid h-10 w-10 place-items-center rounded-full text-text hover:bg-card-gray"
-          >
-            <Icon name="bell-outline" size={22} />
-            {unread > 0 && (
-              <span className="absolute end-2 top-2 h-2 w-2 rounded-full bg-primary ring-2 ring-card" />
-            )}
-          </Link>
+          {isGuest ? (
+            <Link
+              href="/settings"
+              aria-label="Settings"
+              className="grid h-10 w-10 place-items-center rounded-full text-text hover:bg-card-gray"
+            >
+              <Icon name="settings-outline" size={22} />
+            </Link>
+          ) : (
+            <Link
+              href="/notifications"
+              aria-label="Notifications"
+              className="relative grid h-10 w-10 place-items-center rounded-full text-text hover:bg-card-gray"
+            >
+              <Icon name="bell-outline" size={22} />
+              {unread > 0 && (
+                <span className="absolute end-2 top-2 h-2 w-2 rounded-full bg-primary ring-2 ring-card" />
+              )}
+            </Link>
+          )}
           <Link
             href="/cart"
             className={cn(
@@ -125,13 +137,23 @@ export function SiteHeader() {
               </span>
             )}
           </Link>
-          <Link
-            href="/profile"
-            aria-label="Profile"
-            className="relative ms-1 h-10 w-10 overflow-hidden rounded-full ring-2 ring-border"
-          >
-            <UserAvatar className="h-full w-full" sizes="40px" initialsClass="text-xs" />
-          </Link>
+          {isGuest ? (
+            <Link
+              href="/login"
+              className="ms-1 flex h-10 items-center gap-1.5 rounded-full border border-border px-4 text-sm font-bold text-text hover:border-primary hover:text-primary"
+            >
+              <Icon name="login-2-outline" size={18} />
+              Sign in
+            </Link>
+          ) : (
+            <Link
+              href="/profile"
+              aria-label="Profile"
+              className="relative ms-1 h-10 w-10 overflow-hidden rounded-full ring-2 ring-border"
+            >
+              <UserAvatar className="h-full w-full" sizes="40px" initialsClass="text-xs" />
+            </Link>
+          )}
         </div>
       </div>
     </header>
@@ -139,6 +161,7 @@ export function SiteHeader() {
 }
 
 export function SiteFooter() {
+  const { isGuest } = useSession();
   return (
     <footer className="mt-auto hidden shrink-0 border-t border-border bg-card md:block">
       <Container className="flex flex-col gap-6 py-10 lg:flex-row lg:items-start lg:justify-between">
@@ -162,9 +185,18 @@ export function SiteFooter() {
           </div>
           <div>
             <p className="mb-3 font-bold text-text">Account</p>
-            <FooterLink href="/orders">Orders</FooterLink>
-            <FooterLink href="/favorites">Favorites</FooterLink>
-            <FooterLink href="/saved-combos">Saved combos</FooterLink>
+            {isGuest ? (
+              <>
+                <FooterLink href="/login">Sign in</FooterLink>
+                <FooterLink href="/register">Create account</FooterLink>
+              </>
+            ) : (
+              <>
+                <FooterLink href="/orders">Orders</FooterLink>
+                <FooterLink href="/favorites">Favorites</FooterLink>
+                <FooterLink href="/saved-combos">Saved combos</FooterLink>
+              </>
+            )}
             <FooterLink href="/settings">Settings</FooterLink>
           </div>
           <div>

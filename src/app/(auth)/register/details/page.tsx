@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { SelectableChip } from "@/components/ui/Misc";
 import { useFulfillment } from "@/context/FulfillmentContext";
+import { useSession } from "@/context/SessionContext";
 import { useSnackbar } from "@/context/SnackbarContext";
 
 function subscribeNothing() {
@@ -40,6 +41,7 @@ export default function RegistrationDetailsPage() {
   const router = useRouter();
   const snack = useSnackbar();
   const { saveAddress } = useFulfillment();
+  const session = useSession();
   const [step, setStep] = useState(0);
   const name = useSyncExternalStore(subscribeNothing, readRegisterFirstName, () => "");
   const [address, setAddress] = useState<AddressForm>({
@@ -67,6 +69,7 @@ export default function RegistrationDetailsPage() {
 
   function finish() {
     window.localStorage.setItem("tk_onboarded", "1");
+    session.signIn();
     const line = [address.street, address.city, address.postalCode].filter(Boolean).join(", ");
     if (line) saveAddress(line, "delivery");
     snack.show("Account created — welcome!", "success");
@@ -84,7 +87,6 @@ export default function RegistrationDetailsPage() {
       <AuthHeader
         title={name ? `Hi ${name} 👋` : "Almost there"}
         subtitle="Tell us where to deliver and what to avoid."
-        gradient="from-tertiary to-tertiary-dark"
         showBack
         onBack={() => (step > 0 ? setStep(step - 1) : router.back())}
         footer={<StepProgressBar step={step} total={steps.length} />}

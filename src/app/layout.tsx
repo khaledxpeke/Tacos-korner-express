@@ -30,7 +30,6 @@ const almarai = localFont({
 export const metadata: Metadata = {
   title: "Takos Korner",
   description: "Order from the best restaurants around you.",
-  icons: { icon: "/images/logo/logo_foreground.png" },
 };
 
 export const viewport: Viewport = {

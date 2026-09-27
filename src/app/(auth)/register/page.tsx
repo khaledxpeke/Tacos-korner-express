@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AuthHeader, PasswordStrengthBar, SocialButton, isPasswordAcceptable } from "@/components/auth/AuthWidgets";
-import { LegalSheet } from "@/components/legal/LegalSheet";
+import { LegalSheet, type LegalKind } from "@/components/legal/LegalSheet";
 import { Button } from "@/components/ui/Button";
-import { Checkbox, PhoneField, TextField } from "@/components/ui/Fields";
+import { PhoneField, TextField } from "@/components/ui/Fields";
+import { Icon } from "@/components/ui/Icon";
 import { useSnackbar } from "@/context/SnackbarContext";
-import { privacyDoc, termsDoc, type LegalDoc } from "@/data/legal";
+import { cn } from "@/lib/utils";
 
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -18,7 +19,7 @@ export default function RegisterPage() {
   const snack = useSnackbar();
   const [f, setF] = useState({ first: "", last: "", email: "", phone: "", password: "", confirm: "" });
   const [terms, setTerms] = useState(false);
-  const [legal, setLegal] = useState<LegalDoc | null>(null);
+  const [legal, setLegal] = useState<LegalKind | null>(null);
   const [errors, setErrors] = useState<Partial<Record<keyof typeof f | "terms", string>>>({});
 
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -48,7 +49,6 @@ export default function RegisterPage() {
       <AuthHeader
         title="Create account"
         subtitle="A few details and you're ready to order."
-        gradient="from-secondary to-secondary-dark"
       />
       <form onSubmit={submit} className="flex flex-1 flex-col gap-4 px-7 py-7 md:px-0">
         <div className="grid grid-cols-2 gap-3">
@@ -89,11 +89,15 @@ export default function RegisterPage() {
           error={errors.confirm}
           autoComplete="new-password"
         />
-        <Checkbox checked={terms} onChange={setTerms}>
-          I agree to the{" "}
-          <LegalLink onClick={() => setLegal(termsDoc)}>Terms</LegalLink> and{" "}
-          <LegalLink onClick={() => setLegal(privacyDoc)}>Privacy Policy</LegalLink>
-        </Checkbox>
+        <TermsConsent
+          checked={terms}
+          onChange={(v) => {
+            setTerms(v);
+            if (v) setErrors((e) => ({ ...e, terms: undefined }));
+          }}
+          onRead={setLegal}
+          error={errors.terms}
+        />
         <Button title="Continue" type="submit" icon="alt-arrow-right-outline" iconRight className="mt-2" />
 
         <div className="my-2 flex items-center gap-3 text-[11px] font-semibold text-text-muted">
@@ -111,7 +115,58 @@ export default function RegisterPage() {
           <Link href="/login" className="font-bold text-primary">Sign in</Link>
         </p>
       </form>
-      <LegalSheet doc={legal} onClose={() => setLegal(null)} />
+      <LegalSheet
+        open={legal}
+        onClose={() => setLegal(null)}
+        onAccept={() => {
+          setTerms(true);
+          setErrors((e) => ({ ...e, terms: undefined }));
+        }}
+      />
+    </div>
+  );
+}
+
+/** Checkbox with the two documents as inline text buttons; each opens the legal sheet. */
+function TermsConsent({
+  checked,
+  onChange,
+  onRead,
+  error,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  onRead: (kind: LegalKind) => void;
+  error?: string;
+}) {
+  return (
+    <div>
+      <label className="flex cursor-pointer items-center gap-3">
+        <input
+          type="checkbox"
+          className="peer sr-only"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+        />
+        <span
+          className={cn(
+            "grid h-5 w-5 shrink-0 place-items-center rounded-md border-2 transition peer-focus-visible:ring-2 peer-focus-visible:ring-amber/40",
+            checked ? "border-primary bg-primary text-white" : error ? "border-danger bg-card" : "border-text-muted bg-card",
+          )}
+        >
+          {checked && <Icon name="check-read-outline" size={14} />}
+        </span>
+        <span className="text-xs text-text-body">
+          I agree to the <LegalLink onClick={() => onRead("terms")}>Terms of Service</LegalLink> and{" "}
+          <LegalLink onClick={() => onRead("privacy")}>Privacy Policy</LegalLink>
+        </span>
+      </label>
+      {error && (
+        <p className="mt-1.5 flex items-center gap-1.5 ps-8 text-xs font-semibold text-danger">
+          <Icon name="danger-circle-outline" size={14} />
+          {error}
+        </p>
+      )}
     </div>
   );
 }

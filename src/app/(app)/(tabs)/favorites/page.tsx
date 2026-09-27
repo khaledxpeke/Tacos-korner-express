@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { BackAppBar } from "@/components/layout/BackAppBar";
+import { Container } from "@/components/layout/Container";
 import { Page } from "@/components/layout/Page";
 import { ProductCard } from "@/components/home/ProductCard";
 import { RestaurantCard } from "@/components/home/RestaurantCard";
@@ -15,7 +15,7 @@ import { products, restaurants } from "@/data/home";
 import { productsForMode, restaurantsForMode } from "@/lib/restaurants";
 type View = "dishes" | "restaurants";
 
-/** Mirrors `favorite_screen.dart`. */
+/** Mirrors `favorite_screen.dart`. A bottom-nav tab on phones. */
 export default function FavoritesPage() {
   const router = useRouter();
   const { favoriteProductNames, favoriteRestaurantIds } = useFavorites();
@@ -28,7 +28,13 @@ export default function FavoritesPage() {
 
   return (
     <>
-      <BackAppBar title="Favourites" subtitle="Restaurants and dishes you've saved" fallbackHref="/profile" />
+      {/* A tab screen: title bar like My Cart, no back button. */}
+      <header className="sticky top-14 z-20 bg-card md:static md:bg-transparent">
+        <Container className="flex h-[60px] flex-col justify-center md:h-auto md:pt-8">
+          <h1 className="text-lg font-bold text-text md:text-2xl md:font-extrabold">Favourites</h1>
+          <p className="text-xs text-text-muted md:text-sm">Restaurants and dishes you&apos;ve saved</p>
+        </Container>
+      </header>
       <Page>
         {empty ? (
           <div className="mx-auto max-w-md">

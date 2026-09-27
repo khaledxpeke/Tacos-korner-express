@@ -131,6 +131,18 @@ export const onboardingSlides = [
     image:
       "https://images.unsplash.com/photo-1526367790999-0150786686a2?w=800&q=80",
   },
+  {
+    title: "Pick up on your way",
+    sub: "Order ahead, skip the queue and grab it from the counter the moment it's ready.",
+    image:
+      "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80",
+  },
+  {
+    title: "Earn with every bite",
+    sub: "Collect Korner Points on each order and unlock free meals and weekend deals.",
+    image:
+      "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=800&q=80",
+  },
 ];
 
 export const faqs = [

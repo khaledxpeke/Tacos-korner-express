@@ -10,6 +10,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { Switch } from "@/components/ui/Fields";
 import { Icon } from "@/components/ui/Icon";
 import { languages, useLanguage } from "@/context/LanguageContext";
+import { useSession } from "@/context/SessionContext";
 import { useSnackbar } from "@/context/SnackbarContext";
 import { useTheme } from "@/context/ThemeContext";
 import { cn } from "@/lib/utils";
@@ -19,10 +20,11 @@ export default function SettingsPage() {
   const snack = useSnackbar();
   const { isDark, toggle } = useTheme();
   const [logout, setLogout] = useState(false);
+  const session = useSession();
 
   return (
     <>
-      <BackAppBar title="Settings" subtitle="Language, appearance, and support" fallbackHref="/profile" />
+      <BackAppBar title="Settings" subtitle="Language, appearance, and support" fallbackHref={session.isGuest ? "/home" : "/profile"} />
       <Page className="md:py-5">
         <div className="mx-auto flex max-w-2xl flex-col gap-6">
           <Section title="Preferences">
@@ -64,6 +66,9 @@ export default function SettingsPage() {
             />
           </Section>
 
+          {session.isGuest ? (
+            <GuestCard />
+          ) : (
           <button
             type="button"
             onClick={() => setLogout(true)}
@@ -72,6 +77,7 @@ export default function SettingsPage() {
             <Icon name="logout-2-outline" size={18} />
             Log out
           </button>
+          )}
         </div>
       </Page>
 
@@ -83,11 +89,44 @@ export default function SettingsPage() {
         confirmText="Log out"
         danger
         onConfirm={() => {
+          session.signOut();
           snack.show("Logged out", "info");
           router.push("/login");
         }}
       />
     </>
+  );
+}
+
+/** Guests: no account to log out of, so invite them to make one. */
+function GuestCard() {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-card md:p-5">
+      <div className="flex items-start gap-3">
+        <RowIcon icon="user-circle-outline" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold text-text">You&apos;re browsing as a guest</span>
+          <span className="block text-xs text-text-muted">
+            Sign in to check out, track orders, and keep favorites and addresses.
+          </span>
+        </span>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <Link
+          href="/login"
+          className="flex h-11 items-center justify-center gap-1.5 rounded-[12px] bg-primary text-sm font-bold text-white"
+        >
+          <Icon name="login-2-outline" size={18} />
+          Sign in
+        </Link>
+        <Link
+          href="/register"
+          className="flex h-11 items-center justify-center rounded-[12px] border border-border bg-card text-sm font-bold text-text transition hover:border-primary hover:text-primary"
+        >
+          Create account
+        </Link>
+      </div>
+    </div>
   );
 }
 

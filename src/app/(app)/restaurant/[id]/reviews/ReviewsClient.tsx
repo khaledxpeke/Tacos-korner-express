@@ -68,7 +68,7 @@ export function ReviewsClient({ restaurant }: { restaurant: RestaurantModel }) {
       />
       <Page className="md:pt-4">
         <RatingSummary rating={restaurant.rating} count={restaurant.reviews} reviews={all} />
-        <div className="no-scrollbar -mx-5 mt-4 flex gap-2 overflow-x-auto px-5 md:mx-0 md:px-0">
+        <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto">
           <SelectableChip label={`All (${all.length})`} selected={filter === "all"} onClick={() => setFilter("all")} />
           {([5, 4, 3, 2, 1] as const).map((s) => (
             <SelectableChip

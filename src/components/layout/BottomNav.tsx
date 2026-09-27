@@ -4,16 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { useCart } from "@/context/CartContext";
+import { useSession } from "@/context/SessionContext";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { href: "/home", label: "Home", outline: "home-2-outline", bold: "home-2-bold" },
-  {
-    href: "/reels",
-    label: "Reels",
-    outline: "video-frame-play-horizontal-outline",
-    bold: "video-frame-play-horizontal-bold",
-  },
+  { href: "/favorites", label: "Favorites", outline: "heart-outline", bold: "heart-bold" },
   {
     href: "/cart",
     label: "Cart",
@@ -23,14 +19,19 @@ const tabs = [
   { href: "/profile", label: "Profile", outline: "user-outline", bold: "user-bold" },
 ] as const;
 
+/** Guests have no favorites or profile. Settings stays reachable from the home app bar. */
+const guestTabs = [tabs[0], tabs[2]];
+
 export function BottomNav() {
   const pathname = usePathname();
   const { itemCount } = useCart();
+  const { isGuest } = useSession();
+  const shown = isGuest ? guestTabs : tabs;
 
   return (
     <nav className="sticky bottom-0 z-30 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] md:hidden">
       <ul className="flex h-[60px] items-stretch">
-        {tabs.map((t) => {
+        {shown.map((t) => {
           const active = pathname === t.href || pathname.startsWith(t.href + "/");
           return (
             <li key={t.href} className="flex-1">

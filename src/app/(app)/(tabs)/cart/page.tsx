@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { SignInPrompt } from "@/components/auth/SignInPrompt";
 import { CartLine } from "@/components/cart/CartLine";
 import { ProductCard } from "@/components/home/ProductCard";
 import { Container } from "@/components/layout/Container";
@@ -14,6 +15,7 @@ import { Icon } from "@/components/ui/Icon";
 import { EmptyCard, SelectableChip } from "@/components/ui/Misc";
 import { useCart } from "@/context/CartContext";
 import { useFulfillment } from "@/context/FulfillmentContext";
+import { useSession } from "@/context/SessionContext";
 import { useSnackbar } from "@/context/SnackbarContext";
 import { recommendedProducts } from "@/data/home";
 import { productsForMode } from "@/lib/restaurants";
@@ -27,6 +29,14 @@ export default function CartPage() {
   const { mode } = useFulfillment();
   const suggestions = productsForMode(mode, recommendedProducts).slice(0, 4);
   const [confirmClear, setConfirmClear] = useState(false);
+  const { isGuest } = useSession();
+  const [askSignIn, setAskSignIn] = useState(false);
+
+  function canCheckout() {
+    if (!isGuest) return true;
+    setAskSignIn(true);
+    return false;
+  }
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState(false);
 
@@ -229,7 +239,7 @@ export default function CartPage() {
                 </div>
 
                 <div className="hidden overflow-hidden rounded-card border-[0.5px] border-border shadow-card lg:block">
-                  <ReceiptSummaryCard cta={<CheckoutButton onGo={() => router.push("/checkout")} />} />
+                  <ReceiptSummaryCard cta={<CheckoutButton canGo={canCheckout} onGo={() => router.push("/checkout")} />} />
                 </div>
               </aside>
             </div>
@@ -245,10 +255,12 @@ export default function CartPage() {
               <p className="text-[11px] text-text-muted">Total</p>
               <p className="text-lg font-extrabold text-text">{money(cart.total)}</p>
             </div>
-            <CheckoutButton className="flex-1" onGo={() => router.push("/checkout")} />
+            <CheckoutButton className="flex-1" canGo={canCheckout} onGo={() => router.push("/checkout")} />
           </Container>
         </div>
       )}
+
+      <SignInPrompt open={askSignIn} onClose={() => setAskSignIn(false)} />
 
       <Dialog
         open={confirmClear}
