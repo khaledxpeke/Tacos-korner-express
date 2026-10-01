@@ -78,7 +78,7 @@ export function RestaurantQuickPeek({
             label="Share"
             icon="share-outline"
             onClick={() => {
-              const url = `${window.location.origin}/restaurant/${restaurant.id}`;
+              const url = `${window.location.origin}${process.env.NEXT_PUBLIC_BASE_PATH || ""}/restaurant/${restaurant.id}`;
               if (navigator.share) {
                 navigator.share({ title: restaurant.name, url }).catch(() => {});
               } else {
