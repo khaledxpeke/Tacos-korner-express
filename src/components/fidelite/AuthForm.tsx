@@ -36,6 +36,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [loginWith, setLoginWith] = useState<"email" | "phone">("email");
   const [submitted, setSubmitted] = useState(false);
   const [touched, setTouched] = useState({ name: false, email: false, phone: false, password: false });
 
@@ -55,7 +56,9 @@ export default function AuthForm({ mode }: { mode: Mode }) {
           ? "2 caractères minimum."
           : "Le nom est requis."
       : "";
-  const emailError = emailMessage(email, reveal.email);
+  const showEmail = mode === "signup" || loginWith === "email";
+  const showPhone = mode === "signup" || loginWith === "phone";
+  const emailError = showEmail ? emailMessage(email, reveal.email) : "";
   const phoneError =
     phoneTooLongMessage(phone, selected) ||
     (reveal.phone && (digits.length < selected.min || digits.length > selected.max)
@@ -89,14 +92,19 @@ export default function AuthForm({ mode }: { mode: Mode }) {
       digits.length < selected.min ||
       digits.length > selected.max ||
       !isLoyaltyPasswordStrong(password);
-    const loginInvalid = Boolean(emailMessage(email, true)) || !password;
+    const loginInvalid =
+      loginWith === "phone"
+        ? digits.length < selected.min || digits.length > selected.max || !password
+        : Boolean(emailMessage(email, true)) || !password;
     if (mode === "signup" ? signupInvalid : loginInvalid) return;
     setBusy(true);
     try {
       const body =
         mode === "signup"
           ? { fullName, email, country, phone, password }
-          : { email, password };
+          : loginWith === "phone"
+            ? { phone, country, password }
+            : { email, password };
       const result = await loyaltyApi<{ token: string; account: LoyaltyAccount }>(
         mode === "signup" ? "/loyalty/signup" : "/loyalty/login",
         { method: "POST", body: JSON.stringify(body) }
@@ -122,7 +130,9 @@ export default function AuthForm({ mode }: { mode: Mode }) {
         title={mode === "login" ? "Bon retour" : "Créer un compte"}
         subtitle={
           mode === "login"
-            ? "Connectez-vous avec votre e-mail."
+            ? loginWith === "phone"
+              ? "Connectez-vous avec votre numéro."
+              : "Connectez-vous avec votre e-mail."
             : "E-mail, mot de passe, et le numéro utilisé sur la borne."
         }
       />
@@ -143,6 +153,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
             required
           />
         )}
+        {showEmail && (
         <TextField
           label="E-mail"
           type="email"
@@ -158,7 +169,8 @@ export default function AuthForm({ mode }: { mode: Mode }) {
           placeholder="vous@email.com"
           required
         />
-        {mode === "signup" && (
+        )}
+        {showPhone && (
           <label className="block">
             <span className="mb-1.5 block text-xs font-semibold text-text-body">Téléphone</span>
             <span className="flex gap-2">
@@ -227,6 +239,19 @@ export default function AuthForm({ mode }: { mode: Mode }) {
         )}
         {error && (
           <p className="rounded-[12px] bg-danger-bg px-3 py-2 text-sm text-danger">{error}</p>
+        )}
+        {mode === "login" && (
+          <button
+            type="button"
+            onClick={() => {
+              setLoginWith((current) => (current === "email" ? "phone" : "email"));
+              setSubmitted(false);
+              setError("");
+            }}
+            className="self-center text-sm font-semibold text-text-body"
+          >
+            {loginWith === "email" ? "Se connecter avec le numéro" : "Se connecter avec l'e-mail"}
+          </button>
         )}
         <PrimaryButton title={mode === "login" ? "Se connecter" : "S'inscrire"} loading={busy} />
         <p className="mt-auto pt-6 text-center text-sm text-text-body">
