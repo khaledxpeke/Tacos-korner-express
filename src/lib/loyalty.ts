@@ -13,6 +13,7 @@ export const loyaltyRoutes = {
 export type LoyaltyAccount = {
   userId: string;
   fullName: string;
+  email: string;
   phone: string;
   code: string;
   balance: number;

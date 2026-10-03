@@ -56,7 +56,7 @@ export default function PointsPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <PageHeader title="Mes points" subtitle={account.fullName} />
+      <PageHeader title="Mes points" subtitle={`${account.fullName} · ${account.email}`} />
       <div className="flex flex-1 flex-col gap-4 px-7 py-7 md:px-0">
         <section className="rounded-[16px] bg-card p-5 shadow-card">
           <p className="text-xs font-semibold tracking-wide text-text-muted uppercase">Solde</p>
