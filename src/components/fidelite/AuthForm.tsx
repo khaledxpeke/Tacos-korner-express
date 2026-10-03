@@ -7,10 +7,21 @@ import { PageHeader } from "@/components/fidelite/Shell";
 import { CountrySelect } from "@/components/fidelite/CountrySelect";
 import { LockIcon, MailIcon, PhoneIcon, PrimaryButton, TextField, UserIcon } from "@/components/fidelite/Fields";
 import { loyaltyApi, loyaltyRoutes, saveToken, type LoyaltyAccount } from "@/lib/loyalty";
-import { isLoyaltyPasswordStrong, loyaltyPasswordError, loyaltyPasswordRules } from "@/lib/loyaltyPassword";
-import { PHONE_COUNTRIES, phoneLengthLabel } from "@/lib/phoneCountries";
+import { isLoyaltyPasswordStrong, loyaltyPasswordRules } from "@/lib/loyaltyPassword";
+import { nationalDigits, PHONE_COUNTRIES, phoneLengthLabel, phoneTooLongMessage } from "@/lib/phoneCountries";
 
 type Mode = "login" | "signup";
+
+function emailMessage(value: string, revealIncomplete: boolean) {
+  const email = value.trim();
+  if (!email) return revealIncomplete ? "L'e-mail est requis." : "";
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "";
+  const domain = email.split("@")[1] ?? "";
+  if (!email.includes("@") || revealIncomplete || domain.includes(".") || /\s/.test(email)) {
+    return "Adresse e-mail invalide.";
+  }
+  return "";
+}
 
 export default function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
@@ -25,26 +36,62 @@ export default function AuthForm({ mode }: { mode: Mode }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [touched, setTouched] = useState({ name: false, email: false, phone: false, password: false });
 
   const selected = PHONE_COUNTRIES.find((item) => item.iso === country) ?? PHONE_COUNTRIES[0];
+  const reveal = {
+    name: touched.name || submitted,
+    email: touched.email || submitted,
+    phone: touched.phone || submitted,
+    password: touched.password || submitted,
+  };
+  const digits = nationalDigits(phone);
+  const nameError =
+    mode === "signup" && reveal.name
+      ? fullName.trim().length >= 2
+        ? ""
+        : fullName.trim()
+          ? "2 caractères minimum."
+          : "Le nom est requis."
+      : "";
+  const emailError = emailMessage(email, reveal.email);
+  const phoneError =
+    phoneTooLongMessage(phone, selected) ||
+    (reveal.phone && (digits.length < selected.min || digits.length > selected.max)
+      ? digits
+        ? `${phoneLengthLabel(selected)} requis.`
+        : "Le numéro est requis."
+      : "");
+  const missingPasswordRule = loyaltyPasswordRules.find((rule) => !rule.test(password));
+  const passwordError =
+    mode === "signup"
+      ? password
+        ? (missingPasswordRule?.message ?? "")
+        : reveal.password
+          ? "Le mot de passe est requis."
+          : ""
+      : reveal.password && !password
+        ? "Le mot de passe est requis."
+        : "";
+
+  function markTouched(field: keyof typeof touched) {
+    setTouched((current) => ({ ...current, [field]: true }));
+  }
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
-    setBusy(true);
+    setSubmitted(true);
     setError("");
-    if (mode === "signup") {
-      const digits = phone.replace(/\D/g, "").replace(/^0/, "");
-      if (digits.length < selected.min || digits.length > selected.max) {
-        setError(`Le numéro ${selected.name} doit contenir ${phoneLengthLabel(selected)}.`);
-        setBusy(false);
-        return;
-      }
-      if (!isLoyaltyPasswordStrong(password)) {
-        setError(loyaltyPasswordError);
-        setBusy(false);
-        return;
-      }
-    }
+    const signupInvalid =
+      fullName.trim().length < 2 ||
+      Boolean(emailMessage(email, true)) ||
+      digits.length < selected.min ||
+      digits.length > selected.max ||
+      !isLoyaltyPasswordStrong(password);
+    const loginInvalid = Boolean(emailMessage(email, true)) || !password;
+    if (mode === "signup" ? signupInvalid : loginInvalid) return;
+    setBusy(true);
     try {
       const body =
         mode === "signup"
@@ -79,13 +126,18 @@ export default function AuthForm({ mode }: { mode: Mode }) {
             : "E-mail, mot de passe, et le numéro utilisé sur la borne."
         }
       />
-      <form onSubmit={onSubmit} className="flex flex-1 flex-col gap-4 px-7 py-7 md:px-0">
+      <form noValidate onSubmit={onSubmit} className="flex flex-1 flex-col gap-4 px-7 py-7 md:px-0">
         {mode === "signup" && (
           <TextField
             label="Nom"
             icon={<UserIcon />}
             value={fullName}
-            onChange={(event) => setFullName(event.target.value)}
+            onChange={(event) => {
+              setFullName(event.target.value);
+              setError("");
+            }}
+            onBlur={() => markTouched("name")}
+            error={nameError}
             autoComplete="name"
             placeholder="Votre nom"
             required
@@ -96,7 +148,12 @@ export default function AuthForm({ mode }: { mode: Mode }) {
           type="email"
           icon={<MailIcon />}
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            setError("");
+          }}
+          onBlur={() => markTouched("email")}
+          error={emailError}
           autoComplete="email"
           placeholder="vous@email.com"
           required
@@ -112,18 +169,27 @@ export default function AuthForm({ mode }: { mode: Mode }) {
                 </span>
                 <input
                   value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
+                  onChange={(event) => {
+                    setPhone(event.target.value);
+                    setError("");
+                  }}
+                  onBlur={() => markTouched("phone")}
                   inputMode="numeric"
                   autoComplete="tel-national"
                   placeholder={phoneLengthLabel(selected)}
                   aria-label="Numéro de téléphone"
+                  aria-invalid={phoneError ? true : undefined}
                   required
-                  className="w-full rounded-[12px] border border-border bg-card py-3 ps-11 pe-4 text-sm text-text placeholder:text-text-muted outline-none transition focus:border-amber focus:ring-2 focus:ring-amber/25"
+                  className={`w-full rounded-[12px] border bg-card py-3 ps-11 pe-4 text-sm text-text placeholder:text-text-muted outline-none transition focus:ring-2 ${
+                    phoneError
+                      ? "border-danger focus:border-danger focus:ring-danger/25"
+                      : "border-border focus:border-amber focus:ring-amber/25"
+                  }`}
                 />
               </span>
             </span>
-            <span className="mt-1.5 block text-xs text-text-muted">
-              +{selected.dial} · {phoneLengthLabel(selected)}
+            <span className={`mt-1.5 block text-xs ${phoneError ? "text-danger" : "text-text-muted"}`}>
+              {phoneError || `+${selected.dial} · ${phoneLengthLabel(selected)}`}
             </span>
           </label>
         )}
@@ -136,17 +202,22 @@ export default function AuthForm({ mode }: { mode: Mode }) {
             setPassword(event.target.value);
             setError("");
           }}
+          onBlur={() => markTouched("password")}
+          error={passwordError}
           autoComplete={mode === "login" ? "current-password" : "new-password"}
           placeholder={mode === "signup" ? "8 caractères minimum" : "Votre mot de passe"}
-          minLength={mode === "signup" ? 8 : undefined}
           required
         />
         {mode === "signup" && (
-          <ul className="grid grid-cols-2 gap-x-3 gap-y-1">
+          <ul className="-mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
             {loyaltyPasswordRules.map((rule) => {
               const ok = rule.test(password);
+              const failed = Boolean(password) && !ok;
               return (
-                <li key={rule.label} className={`text-xs ${ok ? "font-semibold text-green" : "text-text-muted"}`}>
+                <li
+                  key={rule.label}
+                  className={`text-xs ${ok ? "font-semibold text-green" : failed ? "text-danger" : "text-text-muted"}`}
+                >
                   {ok ? "✓" : "•"} {rule.label}
                 </li>
               );

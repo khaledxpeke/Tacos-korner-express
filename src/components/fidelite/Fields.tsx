@@ -3,7 +3,7 @@
 import { useId, useState, type InputHTMLAttributes, type ReactNode } from "react";
 
 const fieldBase =
-  "w-full rounded-[12px] border bg-card px-4 py-3 text-sm text-text placeholder:text-text-muted outline-none transition focus:border-amber focus:ring-2 focus:ring-amber/25";
+  "w-full rounded-[12px] border bg-card px-4 py-3 text-sm text-text placeholder:text-text-muted outline-none transition focus:ring-2";
 
 export function TextField({
   label,
@@ -19,6 +19,7 @@ export function TextField({
 }) {
   const autoId = useId();
   const inputId = id ?? autoId;
+  const errorId = `${inputId}-error`;
   const [show, setShow] = useState(false);
   const isPassword = type === "password";
 
@@ -34,8 +35,12 @@ export function TextField({
         <input
           id={inputId}
           type={isPassword && show ? "text" : type}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
           className={`${fieldBase} ${icon ? "ps-11" : ""} ${isPassword ? "pe-11" : ""} ${
-            error ? "border-danger" : "border-border"
+            error
+              ? "border-danger focus:border-danger focus:ring-danger/25"
+              : "border-border focus:border-amber focus:ring-amber/25"
           }`}
           {...rest}
         />
@@ -51,6 +56,11 @@ export function TextField({
           </button>
         )}
       </span>
+      {error && (
+        <span id={errorId} className="mt-1.5 block text-xs text-danger">
+          {error}
+        </span>
+      )}
     </label>
   );
 }

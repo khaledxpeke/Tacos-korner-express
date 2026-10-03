@@ -36,3 +36,14 @@ export function phoneLengthLabel(country: PhoneCountry) {
     ? `${country.min} chiffres`
     : `${country.min} à ${country.max} chiffres`;
 }
+
+export function nationalDigits(value: string) {
+  return value.replace(/\D/g, "").replace(/^0/, "");
+}
+
+/** Shown as soon as the number is longer than the country allows. Empty while it can still become valid. */
+export function phoneTooLongMessage(value: string, country: PhoneCountry) {
+  const digits = nationalDigits(value);
+  if (digits.length <= country.max) return "";
+  return `Maximum ${country.max} chiffres.`;
+}
