@@ -4,8 +4,10 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/fidelite/Shell";
+import { CountrySelect } from "@/components/fidelite/CountrySelect";
 import { LockIcon, MailIcon, PhoneIcon, PrimaryButton, TextField, UserIcon } from "@/components/fidelite/Fields";
 import { loyaltyApi, loyaltyRoutes, saveToken, type LoyaltyAccount } from "@/lib/loyalty";
+import { isLoyaltyPasswordStrong, loyaltyPasswordError, loyaltyPasswordRules } from "@/lib/loyaltyPassword";
 import { PHONE_COUNTRIES, phoneLengthLabel } from "@/lib/phoneCountries";
 
 type Mode = "login" | "signup";
@@ -34,6 +36,11 @@ export default function AuthForm({ mode }: { mode: Mode }) {
       const digits = phone.replace(/\D/g, "").replace(/^0/, "");
       if (digits.length < selected.min || digits.length > selected.max) {
         setError(`Le numéro ${selected.name} doit contenir ${phoneLengthLabel(selected)}.`);
+        setBusy(false);
+        return;
+      }
+      if (!isLoyaltyPasswordStrong(password)) {
+        setError(loyaltyPasswordError);
         setBusy(false);
         return;
       }
@@ -98,20 +105,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
           <label className="block">
             <span className="mb-1.5 block text-xs font-semibold text-text-body">Téléphone</span>
             <span className="flex gap-2">
-              <span className="relative block w-[42%] shrink-0">
-                <select
-                  value={country}
-                  onChange={(event) => setCountry(event.target.value)}
-                  aria-label="Indicatif"
-                  className="w-full appearance-none rounded-[12px] border border-border bg-card px-3 py-3 text-sm text-text outline-none transition focus:border-amber focus:ring-2 focus:ring-amber/25"
-                >
-                  {PHONE_COUNTRIES.map((item) => (
-                    <option key={item.iso} value={item.iso}>
-                      {item.name} +{item.dial}
-                    </option>
-                  ))}
-                </select>
-              </span>
+              <CountrySelect value={country} onChange={setCountry} />
               <span className="relative block min-w-0 flex-1">
                 <span className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-text-muted">
                   <PhoneIcon />
@@ -138,12 +132,27 @@ export default function AuthForm({ mode }: { mode: Mode }) {
           type="password"
           icon={<LockIcon />}
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          onChange={(event) => {
+            setPassword(event.target.value);
+            setError("");
+          }}
           autoComplete={mode === "login" ? "current-password" : "new-password"}
-          placeholder="6 caractères minimum"
-          minLength={6}
+          placeholder={mode === "signup" ? "8 caractères minimum" : "Votre mot de passe"}
+          minLength={mode === "signup" ? 8 : undefined}
           required
         />
+        {mode === "signup" && (
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-1">
+            {loyaltyPasswordRules.map((rule) => {
+              const ok = rule.test(password);
+              return (
+                <li key={rule.label} className={`text-xs ${ok ? "font-semibold text-green" : "text-text-muted"}`}>
+                  {ok ? "✓" : "•"} {rule.label}
+                </li>
+              );
+            })}
+          </ul>
+        )}
         {error && (
           <p className="rounded-[12px] bg-danger-bg px-3 py-2 text-sm text-danger">{error}</p>
         )}
