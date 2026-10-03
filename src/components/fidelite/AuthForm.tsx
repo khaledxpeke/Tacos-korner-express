@@ -170,10 +170,11 @@ export default function AuthForm({ mode }: { mode: Mode }) {
                 <input
                   value={phone}
                   onChange={(event) => {
-                    setPhone(event.target.value);
+                    setPhone(event.target.value.replace(/\D/g, ""));
                     setError("");
                   }}
                   onBlur={() => markTouched("phone")}
+                  type="tel"
                   inputMode="numeric"
                   autoComplete="tel-national"
                   placeholder={phoneLengthLabel(selected)}
