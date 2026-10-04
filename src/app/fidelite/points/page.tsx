@@ -9,6 +9,7 @@ import {
   getToken,
   loyaltyApi,
   loyaltyRoutes,
+  mediaUrl,
   type LedgerEntry,
   type LedgerPage,
   type LoyaltyAccount,
@@ -26,6 +27,7 @@ export default function PointsPage() {
   const [listError, setListError] = useState("");
   const [loadingList, setLoadingList] = useState(true);
   const [error, setError] = useState("");
+  const [selected, setSelected] = useState<LedgerEntry | null>(null);
 
   useEffect(() => {
     if (!getToken()) {
@@ -113,7 +115,7 @@ export default function PointsPage() {
         ) : (
           <ul>
             {entries.map((entry) => (
-              <Movement key={entry.id} entry={entry} />
+              <Movement key={entry.id} entry={entry} onOpen={() => setSelected(entry)} />
             ))}
           </ul>
         )}
@@ -134,41 +136,165 @@ export default function PointsPage() {
       </section>
 
       <OutlineButton title="Se déconnecter" onClick={logout} />
+      {selected && <OrderDialog entry={selected} onClose={() => setSelected(null)} />}
     </div>
   );
 }
 
-function Movement({ entry }: { entry: LedgerEntry }) {
+function whenLabel(value?: string) {
+  if (!value) return "";
+  return new Date(value).toLocaleString("fr-FR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function Movement({ entry, onOpen }: { entry: LedgerEntry; onOpen: () => void }) {
   const earned = entry.type === "earn";
-  const when = entry.createdAt
-    ? new Date(entry.createdAt).toLocaleString("fr-FR", {
-        day: "2-digit",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "";
+  const order = entry.order;
+  const title = order?.restaurantName || (earned ? "Commande" : "Cashback");
+  const command =
+    order?.commandNumber != null ? `Commande n°${order.commandNumber}` : earned ? "Commande" : "Cashback";
 
   return (
-    <li className="flex items-center gap-3 border-t border-border px-5 py-3">
-      <span
-        className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-extrabold ${
-          earned ? "bg-green-bg text-green" : "bg-primary-bg text-primary"
-        }`}
+    <li className="border-t border-border">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex w-full items-center gap-3 px-4 py-3 text-start transition hover:bg-primary-bg/60"
       >
-        {earned ? "+" : "−"}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold">{earned ? "Commande" : "Cashback"}</span>
-        <span className="block text-xs text-text-muted">{when}</span>
-      </span>
-      <span className="text-end">
-        <span className={`block text-sm font-extrabold ${earned ? "text-green" : "text-primary"}`}>
-          {entry.points > 0 ? `+${entry.points}` : entry.points}
+        <RestaurantMark name={title} logo={order?.logo} />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-semibold">{title}</span>
+          <span className="block truncate text-xs text-text-muted">
+            {command}
+            {order?.pack ? ` · ${order.pack}` : ""} · {whenLabel(entry.createdAt)}
+          </span>
         </span>
-        <span className="block text-[11px] text-text-muted">Solde {entry.balanceAfter}</span>
-      </span>
+        <span className="text-end">
+          <span className={`block text-sm font-extrabold ${earned ? "text-green" : "text-primary"}`}>
+            {entry.points > 0 ? `+${entry.points}` : entry.points}
+          </span>
+          <span className="block text-[11px] text-text-muted">{earned ? "gagnés" : "utilisés"}</span>
+        </span>
+      </button>
     </li>
+  );
+}
+
+function RestaurantMark({ name, logo }: { name: string; logo?: string }) {
+  const [failed, setFailed] = useState(false);
+  const src = !failed ? mediaUrl(logo) : "";
+  const initials = name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+
+  if (!src) {
+    return (
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary-bg text-xs font-extrabold text-primary">
+        {initials || "TK"}
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt=""
+      onError={() => setFailed(true)}
+      className="h-11 w-11 shrink-0 rounded-2xl object-cover"
+    />
+  );
+}
+
+function OrderDialog({ entry, onClose }: { entry: LedgerEntry; onClose: () => void }) {
+  const order = entry.order;
+  const earned = entry.type === "earn";
+  const title = order?.restaurantName || "Commande";
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-3 sm:items-center" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        onClick={(event) => event.stopPropagation()}
+        className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-[24px] bg-card shadow-card"
+      >
+        <div className="flex items-center gap-3 bg-linear-to-br from-primary to-primary-dark px-5 py-5 text-white">
+          <RestaurantMark name={title} logo={order?.logo} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-lg font-extrabold">{title}</p>
+            <p className="text-sm text-white/80">
+              {order?.commandNumber != null ? `Commande n°${order.commandNumber}` : "Commande"}
+              {order?.pack ? ` · ${order.pack}` : ""}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fermer"
+            className="grid h-9 w-9 place-items-center rounded-full bg-white/15 text-lg"
+          >
+            ×
+          </button>
+        </div>
+        <div className="space-y-4 px-5 py-4">
+          <p className="text-xs text-text-muted">
+            {whenLabel(entry.createdAt)}
+            {order?.method ? ` · ${order.method}` : ""}
+          </p>
+          {order?.items?.length ? (
+            <ul className="space-y-3">
+              {order.items.map((item, index) => (
+                <li key={`${item.name}-${index}`}>
+                  <p className="text-sm font-semibold">
+                    {item.count}× {item.name}
+                  </p>
+                  {item.details && <p className="text-xs text-text-body">{item.details}</p>}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-text-body">Le détail de cette commande n’est plus disponible.</p>
+          )}
+          {order?.note && (
+            <p className="rounded-2xl bg-primary-bg px-3 py-2 text-sm text-text">
+              <span className="font-semibold">Note : </span>
+              {order.note}
+            </p>
+          )}
+          <div className="flex items-end justify-between border-t border-border pt-3">
+            <div>
+              <p className="text-[11px] font-semibold tracking-wide text-text-muted uppercase">
+                {earned ? "Points gagnés" : "Points utilisés"}
+              </p>
+              <p className={`text-xl font-extrabold ${earned ? "text-green" : "text-primary"}`}>
+                {entry.points > 0 ? `+${entry.points}` : entry.points}
+              </p>
+            </div>
+            {order?.total != null && (
+              <p className="text-sm font-bold">
+                {Number(order.total).toFixed(2)} {order.currency}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

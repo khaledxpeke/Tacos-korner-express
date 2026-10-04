@@ -19,6 +19,24 @@ export type LoyaltyAccount = {
   balance: number;
 };
 
+export type LedgerOrderItem = {
+  name: string;
+  count: number;
+  details: string;
+};
+
+export type LedgerOrder = {
+  commandNumber: number | null;
+  restaurantName: string;
+  logo: string;
+  total: number | null;
+  currency: string;
+  pack: string;
+  method: string;
+  note: string;
+  items: LedgerOrderItem[];
+};
+
 export type LedgerEntry = {
   id: string;
   type: "earn" | "redeem";
@@ -27,7 +45,15 @@ export type LedgerEntry = {
   historyId: string;
   restaurantId: string;
   createdAt?: string;
+  order?: LedgerOrder | null;
 };
+
+export function mediaUrl(path?: string) {
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path)) return path;
+  const origin = API_URL.replace(/\/api\/?$/, "");
+  return `${origin}/${path.replace(/^\/+/, "")}`;
+}
 
 export type LedgerPage = {
   entries: LedgerEntry[];
