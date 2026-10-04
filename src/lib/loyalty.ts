@@ -29,6 +29,14 @@ export type LedgerEntry = {
   createdAt?: string;
 };
 
+export type LedgerPage = {
+  entries: LedgerEntry[];
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
+};
+
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(TOKEN_KEY);
